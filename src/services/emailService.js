@@ -1,11 +1,11 @@
-const Brevo = require("@brevo/api");
+const Sib = require("@sendinblue/client");
 const envConfig = require("../config/env");
 
-const apiInstance = new Brevo.TransactionalEmailsApi();
+// Inicializar cliente de Brevo/Sendinblue
+const apiInstance = new Sib.TransactionalEmailsApi();
 
-// Configura la API KEY
 apiInstance.setApiKey(
-  Brevo.TransactionalEmailsApiApiKeys.apiKey,
+  Sib.TransactionalEmailsApiApiKeys.apiKey,
   envConfig.brevo.apiKey
 );
 
