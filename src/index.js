@@ -7,8 +7,8 @@ app.listen(PORT, () => {
   console.log(`
   ╔════════════════════════════════════╗
   ║   🎰 POKER FRENZY BACKEND v1.0    ║
-  ║   ✅ Servidor corriendo en puerto ${PORT}    ║
-  ║   🌍 http://localhost:${PORT}         ║
+  ║   ✅ Servidor corriendo en puerto ${PORT}   ║
+  ║   🌍 http://localhost:${PORT}                ║
   ╚════════════════════════════════════╝
   `);
 });
