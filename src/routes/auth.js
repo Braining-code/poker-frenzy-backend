@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const env = require("../config/env");
 const { enviarCodigoVerificacion } = require("../services/emailService");
 
-
 // =========================
 // REGISTER
 // =========================
@@ -44,7 +43,7 @@ exports.register = async (req, res) => {
     const user = nuevo.rows[0];
 
     // Generar código email
-    const codigo = Math.floor(100000 + Math.random() * 900000);
+    const codigo = Math.floor(100000 + Math.random() * 900000).toString();
 
     await db.query(
       `INSERT INTO email_verifications (user_id, code)
@@ -63,10 +62,9 @@ exports.register = async (req, res) => {
 
   } catch (error) {
     console.error("REGISTER ERROR:", error);
-    return res.status(500).json({ error: "Error interno" });
+    return res.status(500).json({ error: "Error interno en registro" });
   }
 };
-
 
 
 // =========================
@@ -80,7 +78,6 @@ exports.verifyEmail = async (req, res) => {
       return res.status(400).json({ error: "Datos incompletos" });
     }
 
-    // Buscar usuario
     const u = await db.query("SELECT id FROM users WHERE email = $1", [email]);
 
     if (u.rows.length === 0) {
@@ -89,7 +86,6 @@ exports.verifyEmail = async (req, res) => {
 
     const userId = u.rows[0].id;
 
-    // Verificar código
     const verif = await db.query(
       "SELECT code FROM email_verifications WHERE user_id = $1 ORDER BY id DESC LIMIT 1",
       [userId]
@@ -99,7 +95,6 @@ exports.verifyEmail = async (req, res) => {
       return res.status(400).json({ error: "Código incorrecto" });
     }
 
-    // Marcar email como verificado
     await db.query(
       "UPDATE users SET email_verified = TRUE WHERE id = $1",
       [userId]
@@ -112,7 +107,6 @@ exports.verifyEmail = async (req, res) => {
     return res.status(500).json({ error: "Error interno" });
   }
 };
-
 
 
 // =========================
@@ -130,19 +124,22 @@ exports.login = async (req, res) => {
 
     const user = q.rows[0];
 
-    // Check password
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
-    const token = jwt.sign({ id: user.id }, env.jwt.secret, {
-      expiresIn: env.jwt.expiresIn,
-    });
+    const token = jwt.sign(
+      { id: user.id },
+      env.jwt.secret,
+      { expiresIn: env.jwt.expiresIn }
+    );
 
-    const refreshToken = jwt.sign({ id: user.id }, env.jwt.refreshSecret, {
-      expiresIn: env.jwt.refreshExpiresIn,
-    });
+    const refreshToken = jwt.sign(
+      { id: user.id },
+      env.jwt.refreshSecret,
+      { expiresIn: env.jwt.refreshExpiresIn }
+    );
 
     return res.json({ ok: true, token, refreshToken });
 
@@ -151,7 +148,6 @@ exports.login = async (req, res) => {
     return res.status(500).json({ error: "Error interno" });
   }
 };
-
 
 
 // =========================
@@ -165,7 +161,8 @@ exports.refresh = async (req, res) => {
       return res.status(400).json({ error: "Falta refreshToken" });
 
     jwt.verify(refreshToken, env.jwt.refreshSecret, (err, data) => {
-      if (err) return res.status(401).json({ error: "Refresh token inválido" });
+      if (err)
+        return res.status(401).json({ error: "Refresh token inválido" });
 
       const newToken = jwt.sign(
         { id: data.id },
