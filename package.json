@@ -1,38 +1,25 @@
 {
   "name": "poker-frenzy-backend",
   "version": "1.0.0",
-  "description": "Backend para Poker Frenzy - Plataforma de torneos de poker con premios reales.",
+  "description": "Backend para Poker Frenzy - Plataforma de torneos de poker",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "test": "jest"
-  },
-  "keywords": [
-    "poker",
-    "tournament",
-    "api",
-    "backend"
-  ],
-  "author": "",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18.0.0"
+    "dev": "nodemon src/index.js"
   },
   "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1",
+    "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "helmet": "^7.1.0",
     "joi": "^17.11.0",
-    "jsonwebtoken": "^9.1.0",
     "node-cron": "^3.0.2",
-    "pg": "^8.11.1",
-    "axios": "^1.6.2"
+    "helmet": "^7.1.0",
+    "@sendinblue/client": "^3.6.5"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
     "nodemon": "^3.0.1"
   }
 }
