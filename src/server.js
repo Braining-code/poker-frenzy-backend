@@ -13,7 +13,11 @@ app.use(helmet.contentSecurityPolicy({
     defaultSrc: ["'self'"],
     scriptSrc: ["'self'", "challenges.cloudflare.com"],
     frameSrc: ["challenges.cloudflare.com"],
-    connectSrc: ["'self'", "api.pokerfrenzy.com"]
+    connectSrc: [
+      "'self'",
+      "api.pokerfrenzy.com",
+      "https://web-production-e4083.up.railway.app"
+    ]
   }
 }));
 
@@ -28,7 +32,8 @@ app.use(cors({
     'http://localhost:3002',
     'http://localhost:3000',
     process.env.PRODUCTION_LANDING_URL,
-    process.env.PRODUCTION_APP_URL
+    process.env.PRODUCTION_APP_URL,
+    "https://web-production-e4083.up.railway.app"
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -56,3 +61,4 @@ app.use('*', (req, res) => {
 app.use(errorHandler);
 
 module.exports = app;
+
