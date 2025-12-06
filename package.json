@@ -17,7 +17,7 @@
     "joi": "^17.11.0",
     "node-cron": "^3.0.2",
     "helmet": "^7.1.0",
-    "@sendinblue/client": "^3.6.5"
+    "@brevo/api": "^1.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
