@@ -15,9 +15,9 @@
             <div class="flex items-center gap-6">
                 <div class="text-sm">
                     <p class="text-gray-400">Hola,</p>
-                    <p class="font-bold text-cyan-300">Juan Pérez</p>
+                    <p class="font-bold text-cyan-300" id="username">Usuario</p>
                 </div>
-                <button class="px-6 py-2 border-2 border-purple-500 text-purple-400 font-bold text-sm rounded-lg hover:bg-purple-500/10 transition-all">CERRAR SESIÓN</button>
+                <button id="cerrar-sesion" class="px-6 py-2 border-2 border-purple-500 text-purple-400 font-bold text-sm rounded-lg hover:bg-purple-500/10 transition-all">CERRAR SESIÓN</button>
             </div>
         </div>
     </nav>
@@ -429,6 +429,27 @@
     </div>
 
     <script>
+        // ============ CONFIGURACIÓN API ============
+        const API_URL = 'https://web-production-e4083.up.railway.app';
+
+        // ============ VALIDACIÓN TOKEN ============
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = 'https://pokerfrenzy.club/ingresar';
+        }
+
+        // ============ CARGAR DATOS DE USUARIO ============
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.username) {
+          document.getElementById('username').textContent = user.username;
+        }
+
+        // ============ BOTÓN CERRAR SESIÓN ============
+        document.getElementById('cerrar-sesion').addEventListener('click', () => {
+          localStorage.clear();
+          window.location.href = 'https://pokerfrenzy.club/ingresar';
+        });
+
         // Suprimir errores de consola
         window.addEventListener('error', (e) => e.preventDefault());
         
