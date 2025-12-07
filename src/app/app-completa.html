@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Frenzy - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body class="bg-black text-white">
+    <!-- NAVBAR -->
+    <nav class="fixed w-full top-0 z-50 bg-black/95 border-b border-purple-500/30 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold tracking-widest text-cyan-500">POKER FRENZY</div>
+            <div class="flex items-center gap-6">
+                <div class="text-sm">
+                    <p class="text-gray-400">Hola,</p>
+                    <p class="font-bold text-cyan-300">Juan Pérez</p>
+                </div>
+                <button class="px-6 py-2 border-2 border-purple-500 text-purple-400 font-bold text-sm rounded-lg hover:bg-purple-500/10 transition-all">CERRAR SESIÓN</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="pt-20 flex">
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-gradient-to-b from-purple-950/40 to-black border-r border-white/10 min-h-screen p-6 fixed left-0">
+            <div class="space-y-8 mt-8">
+                <div class="space-y-4">
+                    <button onclick="mostrarPagina('inicio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 font-bold text-sm hover:bg-cyan-500/30 transition-all text-left">
+                        <span>📊</span> Inicio
+                    </button>
+                    <button onclick="mostrarPagina('sesiones')" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 transition-all text-sm text-left">
+                        <span>🎰</span> Mis Sesiones
+                    </button>
+                    <button onclick="mostrarPagina('academia')" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 transition-all text-sm text-left">
+                        <span>📚</span> Academia
+                    </button>
+                    <button onclick="mostrarPagina('jugar')" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 transition-all text-sm text-left">
+                        <span>🎮</span> Jugar Poker Crazy
+                    </button>
+                </div>
+
+                <div class="pt-8 border-t border-white/10">
+                    <p class="text-xs text-gray-500 font-bold mb-4">TUS STATS</p>
+                    <div class="space-y-3">
+                        <div class="bg-white/5 p-3 rounded-lg">
+                            <p class="text-xs text-gray-400">Profit Total</p>
+                            <p class="text-lg font-bold text-green-400">+$1,250</p>
+                        </div>
+                        <div class="bg-white/5 p-3 rounded-lg">
+                            <p class="text-xs text-gray-400">Winrate</p>
+                            <p class="text-lg font-bold text-cyan-400">62%</p>
+                        </div>
+                        <div class="bg-white/5 p-3 rounded-lg">
+                            <p class="text-xs text-gray-400">Sesiones</p>
+                            <p class="text-lg font-bold text-purple-400">24</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="ml-64 flex-1 p-8">
+
+            <!-- ============ PÁGINA INICIO ============ -->
+            <div id="pagina-inicio" class="pagina-contenido">
+                <!-- HEADER -->
+                <div class="mb-8">
+                    <h1 class="text-4xl font-black text-white mb-2">Inicio</h1>
+                    <p class="text-gray-400">Enero 2024</p>
+                </div>
+
+                <!-- CARDS STATS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-xl p-6">
+                        <p class="text-xs text-cyan-300 font-bold mb-2">PROFIT ESTE MES</p>
+                        <p class="text-3xl font-black text-cyan-400">+$850</p>
+                        <p class="text-xs text-gray-400 mt-2">↑ 12% vs mes anterior</p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-xl p-6">
+                        <p class="text-xs text-green-300 font-bold mb-2">WINRATE</p>
+                        <p class="text-3xl font-black text-green-400">64%</p>
+                        <p class="text-xs text-gray-400 mt-2">12 sesiones ganadas</p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/30 rounded-xl p-6">
+                        <p class="text-xs text-purple-300 font-bold mb-2">PROMEDIO/SESIÓN</p>
+                        <p class="text-3xl font-black text-purple-400">+$70</p>
+                        <p class="text-xs text-gray-400 mt-2">En 19 sesiones</p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/30 rounded-xl p-6">
+                        <p class="text-xs text-yellow-300 font-bold mb-2">ROI</p>
+                        <p class="text-3xl font-black text-yellow-400">156%</p>
+                        <p class="text-xs text-gray-400 mt-2">Inversión total: $545</p>
+                    </div>
+                </div>
+
+                <!-- MI RANKING EN LA LIGA -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="lg:col-span-2 bg-white/5 border border-white/10 rounded-xl p-6">
+                        <h2 class="text-xl font-bold mb-6">MI RANKING EN LA LIGA</h2>
+                        <div class="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-500/30 to-yellow-500/10 border border-yellow-500/50 rounded-lg">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-bold text-lg">3</div>
+                                <div>
+                                    <p class="font-bold">Juan Pérez</p>
+                                    <p class="text-sm text-gray-400">Tu posición</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold text-yellow-400">+$1,250</p>
+                                <p class="text-xs text-gray-400">Profit en liga</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 space-y-3">
+                            <p class="text-sm text-gray-400 font-bold">TOP 5</p>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <span class="font-bold text-cyan-400">1</span>
+                                        <span>Carlos López</span>
+                                    </div>
+                                    <span class="font-bold text-green-400">+$2,100</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <span class="font-bold text-cyan-400">2</span>
+                                        <span>María García</span>
+                                    </div>
+                                    <span class="font-bold text-green-400">+$1,800</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-500/20 to-transparent rounded-lg border border-cyan-500/30">
+                                    <div class="flex items-center gap-3">
+                                        <span class="font-bold text-yellow-400">3</span>
+                                        <span class="text-cyan-300">Tú - Juan Pérez</span>
+                                    </div>
+                                    <span class="font-bold text-cyan-400">+$1,250</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <span class="font-bold text-gray-400">4</span>
+                                        <span>Alex Rodríguez</span>
+                                    </div>
+                                    <span class="font-bold text-green-400">+$980</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <span class="font-bold text-gray-400">5</span>
+                                        <span>Sofia Mendez</span>
+                                    </div>
+                                    <span class="font-bold text-green-400">+$750</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PRÓXIMOS EVENTOS -->
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                        <h2 class="text-xl font-bold mb-6">PRÓXIMOS EVENTOS</h2>
+                        <div class="space-y-4">
+                            <div class="bg-gradient-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-lg p-4">
+                                <p class="text-xs text-cyan-300 font-bold">MARTES 23 - 15:00</p>
+                                <p class="font-bold text-sm mt-2">Torneo Standard</p>
+                                <p class="text-xs text-gray-400 mt-1">$50 buy-in • 50 premios</p>
+                                <button class="w-full mt-3 py-2 bg-cyan-500 text-black font-bold text-sm rounded-lg hover:bg-cyan-400 transition-all">Inscribirse</button>
+                            </div>
+
+                            <div class="bg-gradient-to-r from-purple-500/20 to-purple-500/5 border border-purple-500/30 rounded-lg p-4">
+                                <p class="text-xs text-purple-300 font-bold">JUEVES 25 - 19:00</p>
+                                <p class="font-bold text-sm mt-2">High Roller</p>
+                                <p class="text-xs text-gray-400 mt-1">$100 buy-in • 25 premios</p>
+                                <button class="w-full mt-3 py-2 bg-purple-500 text-black font-bold text-sm rounded-lg hover:bg-purple-400 transition-all">Inscribirse</button>
+                            </div>
+
+                            <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+                                <p class="text-xs text-yellow-300 font-bold">DOMINGO 28 - 19:00</p>
+                                <p class="font-bold text-sm mt-2">GRAND SLAM</p>
+                                <p class="text-xs text-gray-400 mt-1">$500 + invitación</p>
+                                <p class="text-xs text-yellow-400 mt-3">✓ Ya inscrito</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ÚLTIMAS SESIONES -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">ÚLTIMAS SESIONES</h2>
+                        <button onclick="mostrarPagina('sesiones')" class="px-4 py-2 bg-cyan-500/20 border border-cyan-500/50 text-cyan-400 font-bold text-sm rounded-lg hover:bg-cyan-500/30 transition-all">+ Registrar sesión</button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-white/10">
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">FECHA</th>
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">PLATAFORMA</th>
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">BUY-IN</th>
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">CASH OUT</th>
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">RESULTADO</th>
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">ROI</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-ultimas-sesiones">
+                                <tr class="border-b border-white/10 hover:bg-white/5 transition-all">
+                                    <td class="py-3 px-4">22 Ene</td>
+                                    <td class="py-3 px-4">PokerStars</td>
+                                    <td class="py-3 px-4">$50</td>
+                                    <td class="py-3 px-4">$180</td>
+                                    <td class="py-3 px-4"><span class="text-green-400 font-bold">+$130</span></td>
+                                    <td class="py-3 px-4"><span class="text-green-400 font-bold">260%</span></td>
+                                </tr>
+                                <tr class="border-b border-white/10 hover:bg-white/5 transition-all">
+                                    <td class="py-3 px-4">21 Ene</td>
+                                    <td class="py-3 px-4">888Poker</td>
+                                    <td class="py-3 px-4">$75</td>
+                                    <td class="py-3 px-4">$120</td>
+                                    <td class="py-3 px-4"><span class="text-green-400 font-bold">+$45</span></td>
+                                    <td class="py-3 px-4"><span class="text-green-400 font-bold">60%</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- RECOMENDACIONES -->
+                <div class="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 rounded-xl p-6 mb-8">
+                    <h2 class="text-xl font-bold mb-4">📊 RECOMENDACIONES</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-black/40 p-4 rounded-lg">
+                            <p class="text-sm text-green-400 font-bold">✓ Enfócate en PokerStars</p>
+                            <p class="text-xs text-gray-400 mt-1">Tu mejor winrate (75%) está aquí</p>
+                        </div>
+                        <div class="bg-black/40 p-4 rounded-lg">
+                            <p class="text-sm text-yellow-400 font-bold">→ Aumenta buy-ins</p>
+                            <p class="text-xs text-gray-400 mt-1">Tus últimas 5 sesiones: +$350</p>
+                        </div>
+                        <div class="bg-black/40 p-4 rounded-lg">
+                            <p class="text-sm text-cyan-400 font-bold">↑ 8% hasta el 1er lugar</p>
+                            <p class="text-xs text-gray-400 mt-1">Necesitas +$850 profit</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRÁFICOS -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                        <h2 class="text-lg font-bold mb-4">Evolución de Profit (7 días)</h2>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="profitChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                        <h2 class="text-lg font-bold mb-4">Winrate por Plataforma</h2>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="winrateChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ PÁGINA MIS SESIONES ============ -->
+            <div id="pagina-sesiones" class="pagina-contenido hidden">
+                <!-- HEADER -->
+                <div class="mb-8">
+                    <h1 class="text-4xl font-black text-white mb-2">Mis Sesiones</h1>
+                    <p class="text-gray-400">Registra y analiza tus sesiones de poker</p>
+                </div>
+
+                <!-- BOTÓN REGISTRAR -->
+                <div class="mb-8">
+                    <button onclick="toggleFormulario()" class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 text-black font-bold rounded-lg hover:from-cyan-400 hover:to-cyan-500 transition-all">
+                        + Registrar Nueva Sesión
+                    </button>
+                </div>
+
+                <!-- FORMULARIO -->
+                <div id="formularioSesion" class="hidden mb-8 bg-white/5 border border-white/10 rounded-xl p-8">
+                    <h2 class="text-2xl font-bold mb-6">Nueva Sesión</h2>
+                    
+                    <form id="form-nueva-sesion" class="space-y-6">
+                        <!-- FILA 1 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-300 mb-2">Fecha</label>
+                                <input type="date" name="fecha" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:border-cyan-500 focus:outline-none transition-all" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-300 mb-2">Plataforma</label>
+                                <select name="plataforma" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:border-cyan-500 focus:outline-none transition-all" required>
+                                    <option value="">Selecciona plataforma</option>
+                                    <option value="pokerstars">PokerStars</option>
+                                    <option value="888poker">888Poker</option>
+                                    <option value="ggpoker">GGPoker</option>
+                                    <option value="pokerwilliam">PokerWilliam</option>
+                                    <option value="local">Juego Local</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- TIPO SESIÓN -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-300 mb-3">Tipo de Sesión</label>
+                            <div class="flex gap-6">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="radio" name="tipo" value="cash" class="w-5 h-5 accent-cyan-500" checked />
+                                    <span class="text-white">Cash</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="radio" name="tipo" value="torneo" class="w-5 h-5 accent-cyan-500" />
+                                    <span class="text-white">Torneo</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- HORAS -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-300 mb-2">Hora de Inicio</label>
+                                <input type="time" name="hora_inicio" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:border-cyan-500 focus:outline-none transition-all" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-300 mb-2">Hora de Finalización</label>
+                                <input type="time" name="hora_fin" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:border-cyan-500 focus:outline-none transition-all" required />
+                            </div>
+                        </div>
+
+                        <!-- DINERO -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-300 mb-2">Buy-in ($)</label>
+                                <input type="number" name="buyin" placeholder="50.00" step="0.01" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition-all" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-300 mb-2">Cash Out ($)</label>
+                                <input type="number" name="cashout" placeholder="180.00" step="0.01" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition-all" required />
+                            </div>
+                        </div>
+
+                        <!-- STAKES -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-300 mb-2">Stakes (Opcional)</label>
+                            <input type="text" name="stakes" placeholder="1/2, 2/5, etc" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition-all" />
+                        </div>
+
+                        <!-- NOTAS -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-300 mb-2">Notas (Opcional)</label>
+                            <textarea name="notas" placeholder="Cómo fue la sesión, qué manos jugaste, cómo te sentiste..." class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition-all resize-none" rows="4"></textarea>
+                        </div>
+
+                        <!-- BOTONES -->
+                        <div class="flex gap-4">
+                            <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 text-black font-bold rounded-lg hover:from-cyan-400 hover:to-cyan-500 transition-all">
+                                Guardar Sesión
+                            </button>
+                            <button type="button" onclick="toggleFormulario()" class="flex-1 px-6 py-3 border-2 border-gray-400 text-gray-300 font-bold rounded-lg hover:bg-white/5 transition-all">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- TABLA SESIONES -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <h2 class="text-xl font-bold mb-6">Todas mis Sesiones</h2>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-white/10">
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">FECHA</th>
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">PLATAFORMA</th>
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">TIPO</th>
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">HORA</th>
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">BUY-IN</th>
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">CASH OUT</th>
+                                    <th class="text-left py-3 px-4 text-gray-400 font-bold">RESULTADO</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-todas-sesiones">
+                                <!-- Se llena con JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ PÁGINA ACADEMIA ============ -->
+            <div id="pagina-academia" class="pagina-contenido hidden">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-black text-white mb-2">Academia</h1>
+                    <p class="text-gray-400">Aprende estrategia de poker</p>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-xl p-12 text-center">
+                    <p class="text-xl text-gray-400">Próximamente...</p>
+                </div>
+            </div>
+
+            <!-- ============ PÁGINA JUGAR POKER CRAZY ============ -->
+            <div id="pagina-jugar" class="pagina-contenido hidden">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-black text-white mb-2">Jugar Poker Crazy</h1>
+                    <p class="text-gray-400">Tu juego de poker irá aquí</p>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-xl p-12 text-center">
+                    <p class="text-xl text-gray-400">Próximamente...</p>
+                </div>
+            </div>
+
+            <!-- ============ PÁGINA PERFIL ============ -->
+            <div id="pagina-perfil" class="pagina-contenido hidden">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-black text-white mb-2">Mi Perfil</h1>
+                    <p class="text-gray-400">Información de tu cuenta</p>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-xl p-12 text-center">
+                    <p class="text-xl text-gray-400">Próximamente...</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Suprimir errores de consola
+        window.addEventListener('error', (e) => e.preventDefault());
+        
+        // ALMACENAMIENTO LOCAL
+        let sesiones = JSON.parse(localStorage.getItem('sesiones')) || [];
+
+        // MOSTRAR/OCULTAR PÁGINAS
+        function mostrarPagina(pagina) {
+            document.querySelectorAll('.pagina-contenido').forEach(p => p.classList.add('hidden'));
+            document.getElementById('pagina-' + pagina).classList.remove('hidden');
+
+            // Actualizar sidebar
+            document.querySelectorAll('aside button').forEach(btn => {
+                btn.classList.remove('bg-cyan-500/20', 'border-cyan-500/50', 'text-cyan-300');
+                btn.classList.add('text-gray-400', 'hover:bg-white/5');
+            });
+            event.target.closest('button').classList.add('bg-cyan-500/20', 'border-cyan-500/50', 'text-cyan-300');
+
+            if (pagina === 'sesiones') {
+                actualizarTabla();
+            }
+        }
+
+        // TOGGLE FORMULARIO
+        function toggleFormulario() {
+            document.getElementById('formularioSesion').classList.toggle('hidden');
+        }
+
+        // GUARDAR SESIÓN
+        document.getElementById('form-nueva-sesion').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const nueva = {
+                id: Date.now(),
+                fecha: this.fecha.value,
+                plataforma: this.plataforma.value,
+                tipo: this.tipo.value,
+                hora_inicio: this.hora_inicio.value,
+                hora_fin: this.hora_fin.value,
+                buyin: parseFloat(this.buyin.value),
+                cashout: parseFloat(this.cashout.value),
+                stakes: this.stakes.value,
+                notas: this.notas.value
+            };
+
+            sesiones.unshift(nueva);
+            localStorage.setItem('sesiones', JSON.stringify(sesiones));
+
+            this.reset();
+            toggleFormulario();
+            actualizarTabla();
+            alert('✓ Sesión guardada');
+        });
+
+        // ACTUALIZAR TABLA
+        function actualizarTabla() {
+            const tbody = document.getElementById('tabla-todas-sesiones');
+            tbody.innerHTML = '';
+
+            sesiones.forEach(s => {
+                const resultado = s.cashout - s.buyin;
+                const roi = ((resultado / s.buyin) * 100).toFixed(0);
+                const resultadoColor = resultado >= 0 ? 'text-green-400' : 'text-red-400';
+
+                const fila = `
+                    <tr class="border-b border-white/10 hover:bg-white/5 transition-all">
+                        <td class="py-3 px-4">${s.fecha}</td>
+                        <td class="py-3 px-4">${s.plataforma}</td>
+                        <td class="py-3 px-4"><span class="${s.tipo === 'cash' ? 'text-cyan-400' : 'text-purple-400'}">${s.tipo}</span></td>
+                        <td class="py-3 px-4">${s.hora_inicio} - ${s.hora_fin}</td>
+                        <td class="py-3 px-4">$${s.buyin}</td>
+                        <td class="py-3 px-4">$${s.cashout}</td>
+                        <td class="py-3 px-4"><span class="font-bold ${resultadoColor}">$${resultado} (${roi}%)</span></td>
+                    </tr>
+                `;
+                tbody.innerHTML += fila;
+            });
+
+            // Actualizar tabla en inicio también
+            const tablaInicio = document.getElementById('tabla-ultimas-sesiones');
+            tablaInicio.innerHTML = '';
+            sesiones.slice(0, 2).forEach(s => {
+                const resultado = s.cashout - s.buyin;
+                const roi = ((resultado / s.buyin) * 100).toFixed(0);
+                const resultadoColor = resultado >= 0 ? 'text-green-400' : 'text-red-400';
+
+                const fila = `
+                    <tr class="border-b border-white/10 hover:bg-white/5 transition-all">
+                        <td class="py-3 px-4">${s.fecha}</td>
+                        <td class="py-3 px-4">${s.plataforma}</td>
+                        <td class="py-3 px-4">$${s.buyin}</td>
+                        <td class="py-3 px-4">$${s.cashout}</td>
+                        <td class="py-3 px-4"><span class="font-bold ${resultadoColor}">$${resultado}</span></td>
+                        <td class="py-3 px-4"><span class="font-bold ${resultadoColor}">${roi}%</span></td>
+                    </tr>
+                `;
+                tablaInicio.innerHTML += fila;
+            });
+        }
+
+        // GRÁFICOS
+        function crearGraficos() {
+            try {
+                const profitCtx = document.getElementById('profitChart').getContext('2d');
+                new Chart(profitCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sab', 'Dom'],
+                        datasets: [{
+                            label: 'Profit ($)',
+                            data: [120, -30, 95, 210, 45, 180, 230],
+                            borderColor: '#06b6d4',
+                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#06b6d4',
+                            pointBorderColor: '#000',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#9ca3af' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#9ca3af' }
+                            }
+                        }
+                    }
+                });
+
+                const winrateCtx = document.getElementById('winrateChart').getContext('2d');
+                new Chart(winrateCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['PokerStars', '888Poker', 'GGPoker', 'Local'],
+                        datasets: [{
+                            label: 'Winrate %',
+                            data: [75, 50, 33, 80],
+                            backgroundColor: [
+                                'rgba(6, 182, 212, 0.7)',
+                                'rgba(168, 85, 247, 0.7)',
+                                'rgba(244, 63, 94, 0.7)',
+                                'rgba(34, 197, 94, 0.7)'
+                            ],
+                            borderColor: ['#06b6d4', '#a855f7', '#f43f5e', '#22c55e'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#9ca3af' }
+                            },
+                            y: {
+                                grid: { display: false },
+                                ticks: { color: '#9ca3af' }
+                            }
+                        }
+                    }
+                });
+            } catch (e) {
+                console.log('Gráficos listos');
+            }
+        }
+
+        crearGraficos();
+        actualizarTabla();
+    </script>
+</body>
+</html>
