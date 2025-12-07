@@ -266,9 +266,9 @@ async function refresh(req, res) {
   }
 }
 
-module.exports = {
-  register,
-  verifyEmail,
-  login,
-  refresh,
-};
+const router = require('express').Router();
+router.post('/register', register);
+router.post('/verify-email', verifyEmail);
+router.post('/login', login);
+router.post('/refresh', refresh);
+module.exports = router;
