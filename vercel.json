@@ -1,0 +1,13 @@
+{
+  "outputDirectory": ".",
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/src/index.js"
+    },
+    {
+      "src": "/app/(.*)",
+      "dest": "/src/app/$1"
+    }
+  ]
+}
