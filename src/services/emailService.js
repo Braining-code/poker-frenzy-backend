@@ -8,7 +8,11 @@ async function enviarCodigoVerificacion(email, token) {
 
   try {
     const payload = {
-      templateId: 1, // <<--- TU TEMPLATE ID
+      sender: {
+        email: "german.catzman@gmail.com",  // remitente verificado en Brevo
+        name: "Poker Frenzy"
+      },
+      templateId: 1, // ID de la plantilla Brevo
       to: [{ email }],
       params: {
         verification_link: verificationLink
@@ -35,6 +39,10 @@ async function enviarCodigoVerificacion(email, token) {
     throw new Error("Error enviando email");
   }
 }
+
+module.exports = {
+  enviarCodigoVerificacion,
+};
 
 module.exports = {
   enviarCodigoVerificacion,
