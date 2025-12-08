@@ -4,29 +4,25 @@ const envConfig = require("../config/env");
 // ------------------------------------
 // ENV
 // ------------------------------------
-async function enviarCodigoVerificacion(email, token) {
+async function enviarCodigoVerificacion(email, codigo) {
   const BREVO_KEY = envConfig.brevo.apiKey;
 
-  // ENLACE DE VERIFICACIÓN
-  const verificationLink = `https://pokerfrenzy.club/verify?token=${token}`;
-
   // ------------------------------------
-  // LOGS PARA DEBUG
+  // DEBUG
   // ------------------------------------
   console.log("----------------------------------------------------");
   console.log("🔍 DEBUG BREVO");
-  console.log("🔑 BREVO_KEY ESTÁ CARGADA?:", BREVO_KEY ? "SI" : "NO");
-  console.log("🔑 BREVO_KEY VALOR:", BREVO_KEY);
+  console.log("🔑 BREVO_KEY CARGADA?:", BREVO_KEY ? "SI" : "NO");
   console.log("📩 Enviando email a:", email);
-  console.log("🔗 verificationLink:", verificationLink);
+  console.log("🔢 Código enviado:", codigo);
   console.log("----------------------------------------------------");
 
   try {
     const payload = {
-      templateId: 1, // ID DEL TEMPLATE EN BREVO
+      templateId: 1, // ⚠️ CAMBIA ESTO SI TU NUEVA PLANTILLA TIENE OTRO ID
       to: [{ email }],
       params: {
-        verification_link: verificationLink,
+        verification_code: codigo,   // 👈 ESTE ES EL PARAMETRO CORRECTO
       },
     };
 
