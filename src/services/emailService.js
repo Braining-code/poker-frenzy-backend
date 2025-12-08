@@ -13,27 +13,26 @@ async function enviarCodigoVerificacion(email, codigo) {
 
   try {
     const payload = {
-      templateId: 2,   // ID DEL TEMPLATE ESPAÑOL
+      templateId: 2, // TEMPLATE NUEVO EN ESPAÑOL
       to: [{ email }],
       params: {
-        verification_code: codigo
+        verification_code: codigo // 🔥 ESTO ES LO QUE SE REEMPLAZA EN BREVO
       }
     };
 
     const headers = {
       "api-key": BREVO_KEY,
-      "accept": "application/json",
+      accept: "application/json",
       "content-type": "application/json"
     };
 
-    // 🚨 ESTA LÍNEA ES LA QUE FALTABA
     const response = await axios.post(
       "https://api.brevo.com/v3/smtp/email",
       payload,
       { headers }
     );
 
-    console.log("✔️ Email ENVIADO correctamente");
+    console.log("✔️ Email enviado correctamente");
     return response.data;
 
   } catch (error) {
@@ -45,8 +44,5 @@ async function enviarCodigoVerificacion(email, codigo) {
 }
 
 module.exports = {
-  enviarCodigoVerificacion,
-};
-
-  enviarCodigoVerificacion,
+  enviarCodigoVerificacion
 };
