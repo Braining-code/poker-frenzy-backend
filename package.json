@@ -15,7 +15,7 @@
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
-    "@sendinblue/client": "3.2.2"
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
