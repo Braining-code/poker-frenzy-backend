@@ -1,4 +1,3 @@
-// v2.0 deployment fix
 const axios = require("axios");
 const envConfig = require("../config/env");
 
@@ -14,10 +13,10 @@ async function enviarCodigoVerificacion(email, codigo) {
 
   try {
     const payload = {
-      templateId: 2,   // <-- ID DEL TEMPLATE NUEVO EN ESPAÑOL
+      templateId: 2,   // ID DEL TEMPLATE ESPAÑOL
       to: [{ email }],
       params: {
-        verification_code: codigo   // <-- AHORA SÍ ENVÍA EL CÓDIGO
+        verification_code: codigo
       }
     };
 
@@ -27,13 +26,14 @@ async function enviarCodigoVerificacion(email, codigo) {
       "content-type": "application/json"
     };
 
+    // 🚨 ESTA LÍNEA ES LA QUE FALTABA
     const response = await axios.post(
       "https://api.brevo.com/v3/smtp/email",
       payload,
       { headers }
     );
 
-    console.log(`✔️ Email enviado a: ${email}`);
+    console.log("✔️ Email ENVIADO correctamente");
     return response.data;
 
   } catch (error) {
@@ -45,5 +45,8 @@ async function enviarCodigoVerificacion(email, codigo) {
 }
 
 module.exports = {
+  enviarCodigoVerificacion,
+};
+
   enviarCodigoVerificacion,
 };
