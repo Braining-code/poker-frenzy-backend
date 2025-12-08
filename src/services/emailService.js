@@ -22,7 +22,7 @@ async function enviarCodigoVerificacion(email, codigo) {
         name: "Poker Frenzy",
         email: "mkt@pokerfrenzy.club"
       },
-      templateId: 2, // TEMPLATE ESPAÑOL
+      templateId: 1, // TEMPLATE ESPAÑOL
       to: [{ email }],
       params: {
         verification_code: codigo
