@@ -1,3 +1,8 @@
+// src/services/emailService.js
+// ----------------------------------------------------
+// ENVÍO DE EMAIL DE VERIFICACIÓN (BREVO + CÓDIGO)
+// ----------------------------------------------------
+
 const axios = require("axios");
 const envConfig = require("../config/env");
 
@@ -13,16 +18,16 @@ async function enviarCodigoVerificacion(email, codigo) {
 
   try {
     const payload = {
-      templateId: 2, // TEMPLATE NUEVO EN ESPAÑOL
+      templateId: 2, // 👈 EL TEMPLATE NUEVO EN ESPAÑOL
       to: [{ email }],
       params: {
-        verification_code: codigo // 🔥 ESTO ES LO QUE SE REEMPLAZA EN BREVO
+        verification_code: codigo // 👈 EL CÓDIGO YA SE ENVÍA
       }
     };
 
     const headers = {
       "api-key": BREVO_KEY,
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json"
     };
 
@@ -32,7 +37,7 @@ async function enviarCodigoVerificacion(email, codigo) {
       { headers }
     );
 
-    console.log("✔️ Email enviado correctamente");
+    console.log(`✔️ Email de verificación enviado a: ${email}`);
     return response.data;
 
   } catch (error) {
