@@ -18,10 +18,14 @@ async function enviarCodigoVerificacion(email, codigo) {
 
   try {
     const payload = {
-      templateId: 2, // 👈 EL TEMPLATE NUEVO EN ESPAÑOL
+      sender: {
+        name: "Poker Frenzy",
+        email: "mkt@pokerfrenzy.club"
+      },
+      templateId: 2, // TEMPLATE ESPAÑOL
       to: [{ email }],
       params: {
-        verification_code: codigo // 👈 EL CÓDIGO YA SE ENVÍA
+        verification_code: codigo
       }
     };
 
