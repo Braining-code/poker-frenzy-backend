@@ -54,13 +54,15 @@ app.use('/api/auth', authRoutes);
 // ======================
 // STATIC FILES (Dashboard web app)
 // ======================
-app.use(express.static(path.join(__dirname, 'app')));
+// 🔥 FIX: apuntar a /app real (fuera de src)
+app.use(express.static(path.join(__dirname, '../app')));
 
 // ======================
 // HOME = Dashboard
 // ======================
+// 🔥 FIX: servir app-completa.html desde /app real
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'app', 'app-completa.html'));
+  res.sendFile(path.join(__dirname, '../app', 'app-completa.html'));
 });
 
 // ======================
@@ -76,7 +78,7 @@ app.use('*', (req, res) => {
 app.use(errorHandler);
 
 // ======================
-// START SERVER (FIX)
+// START SERVER
 // ======================
 const PORT = process.env.PORT || 8080;
 
