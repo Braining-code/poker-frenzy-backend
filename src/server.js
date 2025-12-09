@@ -50,10 +50,13 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 // ======================
-// SERVIR DASHBOARD COMO HOME
+// STATIC FILES (Dashboard web app)
 // ======================
 app.use(express.static(path.join(__dirname, 'app')));
 
+// ======================
+// HOME = Dashboard
+// ======================
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'app', 'app-completa.html'));
 });
@@ -71,3 +74,4 @@ app.use('*', (req, res) => {
 app.use(errorHandler);
 
 module.exports = app;
+
