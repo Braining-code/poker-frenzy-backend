@@ -24,15 +24,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // ======================
 app.use(cors({
   origin: [
-    'http://localhost:3001',
-    'http://localhost:3002',
-    'http://localhost:3000',
+    "https://pokerfrenzy.club",
+    "https://frenzy.poker",
+    "https://www.frenzy.poker",
     process.env.PRODUCTION_LANDING_URL,
     process.env.PRODUCTION_APP_URL,
-    "https://pokerfrenzy.club",
-    "https://web-production-e4083.up.railway.app",
-    "https://frenzy.poker",
-    "https://www.frenzy.poker"
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002"
   ],
   credentials: true,
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
@@ -43,7 +42,7 @@ app.use(cors({
 // HEALTH CHECK
 // ======================
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date(), version: '1.0.0' });
+  res.json({ status: 'OK', timestamp: new Date() });
 });
 
 // ======================
@@ -52,17 +51,15 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 // ======================
-// STATIC FILES (Dashboard web app)
+// STATIC FILES (🔥 sirve /app desde raíz del repo)
 // ======================
-// 🔥 FIX: apuntar a /app real (fuera de src)
-app.use(express.static(path.join(__dirname, '../app')));
+app.use(express.static(path.join(__dirname, '..', 'app')));
 
 // ======================
-// HOME = Dashboard
+// HOME (🔥 dashboard principal)
 // ======================
-// 🔥 FIX: servir app-completa.html desde /app real
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../app', 'app-completa.html'));
+  res.sendFile(path.join(__dirname, '..', 'app', 'app-completa.html'));
 });
 
 // ======================
@@ -81,7 +78,6 @@ app.use(errorHandler);
 // START SERVER
 // ======================
 const PORT = process.env.PORT || 8080;
-
 app.listen(PORT, () => {
   console.log(`🔥 Server running on port ${PORT}`);
 });
