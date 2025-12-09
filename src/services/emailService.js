@@ -9,27 +9,17 @@ const envConfig = require("../config/env");
 async function enviarCodigoVerificacion(email, codigo) {
   const BREVO_KEY = envConfig.brevo.apiKey;
 
-  console.log("----------------------------------------------------");
-  console.log("🔍 DEBUG BREVO");
-  console.log("🔑 BREVO_KEY:", BREVO_KEY ? "SI" : "NO");
-  console.log("📩 Enviando email a:", email);
-  console.log("🔢 Código:", codigo);
-  console.log("----------------------------------------------------");
-
-  // 🔥 URL FINAL QUE IRÁ EN EL EMAIL
-  const magic_link = `https://pokerfrenzy.club/activar?email=${encodeURIComponent(email)}&code=${encodeURIComponent(codigo)}`;
-
   try {
     const payload = {
       sender: {
         name: "Poker Frenzy",
         email: "mkt@pokerfrenzy.club"
       },
-      templateId: 2, // Template correcto
+      templateId: 2,   // TEMPLATE CORRECTO
       to: [{ email }],
       params: {
-        verification_code: codigo,  // Por si lo necesitas textual
-        magic_link                // 🔥 ESTA ES LA VARIABLE QUE BREVO REMPLAZA EN {{ magic_link }}
+        email: email,                // 🔥 NECESARIO para el magic link
+        verification_code: codigo    // 🔥 NECESARIO para el magic link
       }
     };
 
@@ -45,15 +35,10 @@ async function enviarCodigoVerificacion(email, codigo) {
       { headers }
     );
 
-    console.log(`✔️ Email de verificación enviado a: ${email}`);
-    console.log("🔗 Magic link enviado:", magic_link);
-
     return response.data;
 
   } catch (error) {
-    console.log("----------------------------------------------------");
     console.error("❌ ERROR EN BREVO:", error.response?.data || error);
-    console.log("----------------------------------------------------");
     throw new Error("Error enviando email");
   }
 }
