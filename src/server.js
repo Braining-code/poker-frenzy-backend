@@ -1,15 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const path = require('path');
+
 const authRoutes = require('./routes/auth.js');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
 // ======================
-// SECURITY MIDDLEWARE
+// SECURITY
 // ======================
-app.use(helmet()); // simple, seguro y compatible
+app.use(helmet());
 
 // ======================
 // BODY PARSING
@@ -31,25 +33,30 @@ app.use(cors({
     "https://web-production-e4083.up.railway.app"
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization']
 }));
 
 // ======================
 // HEALTH CHECK
 // ======================
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date(),
-    version: '1.0.0'
-  });
+  res.json({ status: 'OK', timestamp: new Date(), version: '1.0.0' });
 });
 
 // ======================
-// ROUTES
+// API ROUTES
 // ======================
 app.use('/api/auth', authRoutes);
+
+// ======================
+// SERVIR DASHBOARD COMO HOME
+// ======================
+app.use(express.static(path.join(__dirname, 'app')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'app', 'app-completa.html'));
+});
 
 // ======================
 // 404
