@@ -3,6 +3,7 @@ const { hashPassword, comparePassword, generarCodigoVerificacion } = require('..
 const { generarToken, generarRefreshToken, verificarRefreshToken } = require('../services/jwtService');
 const { enviarCodigoVerificacion } = require('../services/emailService');
 const { VERIFICATION_CODE_EXPIRY, PASSWORD_MIN_LENGTH } = require('../utils/constants');
+const { authenticateToken } = require('../middleware/auth'); // 🔥 IMPORT NECESARIO
 
 
 // ==========================================
@@ -316,4 +317,25 @@ router.post('/register', register);
 router.post('/verify-email', verifyEmail);
 router.post('/login', login);
 router.post('/refresh', refresh);
+
+// =============================
+// GET /me  🔥 NUEVO
+// =============================
+router.get('/me', authenticateToken, async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT id, email, username, email_verified, avatar_url FROM users WHERE id = $1',
+      [req.user.userId]
+    );
+
+    res.json({
+      success: true,
+      user: result.rows[0]
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo usuario' });
+  }
+});
+
 module.exports = router;
