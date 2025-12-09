@@ -51,15 +51,15 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 // ======================
-// STATIC FILES (🔥 sirve /app desde raíz del repo)
+// STATIC FILES (🔥 sirve /app directamente)
 // ======================
-app.use(express.static(path.join(__dirname, '..', 'app')));
+app.use(express.static(path.join(__dirname, 'app')));
 
 // ======================
-// HOME (🔥 dashboard principal)
+// HOME (🔥 dashboard)
 // ======================
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'app', 'app-completa.html'));
+  res.sendFile(path.join(__dirname, 'app', 'app-completa.html'));
 });
 
 // ======================
