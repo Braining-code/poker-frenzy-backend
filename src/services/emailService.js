@@ -1,6 +1,6 @@
 // src/services/emailService.js
 // ----------------------------------------------------
-// ENVÍO DE EMAIL DE VERIFICACIÓN (BREVO + CÓDIGO)
+// ENVÍO DE EMAIL DE VERIFICACIÓN (BREVO + TEMPLATE 2)
 // ----------------------------------------------------
 
 const axios = require("axios");
@@ -22,7 +22,7 @@ async function enviarCodigoVerificacion(email, codigo) {
         name: "Poker Frenzy",
         email: "mkt@pokerfrenzy.club"
       },
-      templateId: 1, // TEMPLATE ESPAÑOL
+      templateId: 2,              // 👈 ESTE ES EL BUENO
       to: [{ email }],
       params: {
         verification_code: codigo
