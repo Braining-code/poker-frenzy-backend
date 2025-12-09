@@ -30,7 +30,9 @@ app.use(cors({
     process.env.PRODUCTION_LANDING_URL,
     process.env.PRODUCTION_APP_URL,
     "https://pokerfrenzy.club",
-    "https://web-production-e4083.up.railway.app"
+    "https://web-production-e4083.up.railway.app",
+    "https://frenzy.poker",
+    "https://www.frenzy.poker"
   ],
   credentials: true,
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
@@ -73,5 +75,11 @@ app.use('*', (req, res) => {
 // ======================
 app.use(errorHandler);
 
-module.exports = app;
+// ======================
+// START SERVER (FIX)
+// ======================
+const PORT = process.env.PORT || 8080;
 
+app.listen(PORT, () => {
+  console.log(`🔥 Server running on port ${PORT}`);
+});
