@@ -4,6 +4,10 @@ const { generarToken, generarRefreshToken, verificarRefreshToken } = require('..
 const { enviarCodigoVerificacion } = require('../services/emailService');
 const { VERIFICATION_CODE_EXPIRY, PASSWORD_MIN_LENGTH } = require('../utils/constants');
 
+
+// ==========================================
+// REGISTER
+// ==========================================
 async function register(req, res) {
   try {
     const { email, username, password, agreeTerms } = req.body;
@@ -92,6 +96,11 @@ async function register(req, res) {
   }
 }
 
+
+
+// ==========================================
+// VERIFY EMAIL + AUTO LOGIN
+// ==========================================
 async function verifyEmail(req, res) {
   try {
     const { email, code } = req.body;
@@ -131,15 +140,36 @@ async function verifyEmail(req, res) {
       });
     }
 
+    // Marcar como verificado
     await db.query(
       'UPDATE users SET email_verified = true, verification_code = NULL, verification_code_expires = NULL WHERE id = $1',
       [user.id]
     );
 
-    res.json({
+    // Obtener datos del usuario
+    const userData = await db.query(
+      'SELECT id, email, username FROM users WHERE id = $1',
+      [user.id]
+    );
+
+    const u = userData.rows[0];
+
+    // GENERAR TOKEN PARA AUTO LOGIN
+    const token = generarToken(u.id, u.email, u.username);
+    const refreshToken = generarRefreshToken(u.id);
+
+    return res.json({
       success: true,
-      message: 'Email verificado exitosamente'
+      message: "Email verificado y sesión iniciada",
+      token,
+      refreshToken,
+      user: {
+        id: u.id,
+        email: u.email,
+        username: u.username
+      }
     });
+
   } catch (error) {
     console.error('Error en verifyEmail:', error);
     res.status(500).json({ 
@@ -149,6 +179,11 @@ async function verifyEmail(req, res) {
   }
 }
 
+
+
+// ==========================================
+// LOGIN
+// ==========================================
 async function login(req, res) {
   try {
     const { email, password } = req.body;
@@ -217,6 +252,11 @@ async function login(req, res) {
   }
 }
 
+
+
+// ==========================================
+// REFRESH TOKEN
+// ==========================================
 async function refresh(req, res) {
   try {
     const { refreshToken } = req.body;
@@ -266,6 +306,11 @@ async function refresh(req, res) {
   }
 }
 
+
+
+// ==========================================
+// ROUTER
+// ==========================================
 const router = require('express').Router();
 router.post('/register', register);
 router.post('/verify-email', verifyEmail);
