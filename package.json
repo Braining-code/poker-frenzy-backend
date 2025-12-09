@@ -1,11 +1,11 @@
 {
   "name": "poker-frenzy-backend",
   "version": "1.0.0",
-  "description": "Backend para Poker Frenzy - Plataforma de torneos de poker",
-  "main": "src/index.js",
+  "description": "Backend para Poker Frenzy - Plataforma de poker",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
