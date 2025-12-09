@@ -3,7 +3,9 @@ const { hashPassword, comparePassword, generarCodigoVerificacion } = require('..
 const { generarToken, generarRefreshToken, verificarRefreshToken } = require('../services/jwtService');
 const { enviarCodigoVerificacion } = require('../services/emailService');
 const { VERIFICATION_CODE_EXPIRY, PASSWORD_MIN_LENGTH } = require('../utils/constants');
-const { authenticateToken } = require('../middleware/auth'); // 🔥 IMPORT NECESARIO
+
+// 🔥 IMPORT CORREGIDO (tu middleware exporta una función, no un objeto)
+const authenticateToken = require('../middleware/auth');
 
 
 // ==========================================
@@ -141,13 +143,11 @@ async function verifyEmail(req, res) {
       });
     }
 
-    // Marcar como verificado
     await db.query(
       'UPDATE users SET email_verified = true, verification_code = NULL, verification_code_expires = NULL WHERE id = $1',
       [user.id]
     );
 
-    // Obtener datos del usuario
     const userData = await db.query(
       'SELECT id, email, username FROM users WHERE id = $1',
       [user.id]
@@ -155,7 +155,6 @@ async function verifyEmail(req, res) {
 
     const u = userData.rows[0];
 
-    // GENERAR TOKEN PARA AUTO LOGIN
     const token = generarToken(u.id, u.email, u.username);
     const refreshToken = generarRefreshToken(u.id);
 
@@ -318,9 +317,10 @@ router.post('/verify-email', verifyEmail);
 router.post('/login', login);
 router.post('/refresh', refresh);
 
-// =============================
-// GET /me  🔥 NUEVO
-// =============================
+
+// ==========================================
+// GET /me   🔥 FIX COMPLETO
+// ==========================================
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const result = await db.query(
@@ -328,14 +328,21 @@ router.get('/me', authenticateToken, async (req, res) => {
       [req.user.userId]
     );
 
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
     res.json({
       success: true,
       user: result.rows[0]
     });
 
   } catch (error) {
+    console.error('Error en /me:', error);
     res.status(500).json({ error: 'Error obteniendo usuario' });
   }
 });
 
+
 module.exports = router;
+
