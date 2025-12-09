@@ -1,9 +1,12 @@
 const { verificarToken } = require('../services/jwtService');
 
-module.exports = function auth(req, res, next) {
+/**
+ * Middleware de autenticación
+ * Valida el token JWT y carga req.user
+ */
+function authenticateToken(req, res, next) {
   const authHeader = req.headers.authorization;
 
-  // No hay header
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({
       error: 'Token no proporcionado',
@@ -11,11 +14,9 @@ module.exports = function auth(req, res, next) {
     });
   }
 
-  // Extraer token
   const token = authHeader.split(' ')[1];
   const decoded = verificarToken(token);
 
-  // Token inválido o expirado
   if (!decoded) {
     return res.status(401).json({
       error: 'Token inválido o expirado',
@@ -23,9 +24,8 @@ module.exports = function auth(req, res, next) {
     });
   }
 
-  // Guardar datos del usuario para el endpoint que sigue
-  // decoded = { userId, email, username }
-  req.user = decoded;
-
+  req.user = decoded; // { userId, email, username }
   next();
-};
+}
+
+module.exports = { authenticateToken };
