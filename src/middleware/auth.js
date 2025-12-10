@@ -24,10 +24,9 @@ function authenticateToken(req, res, next) {
     });
   }
 
-  // Ej: decoded = { userId, email, username, iat, exp }
-  req.user = decoded;
-
+  req.user = decoded; // { userId, email, username }
   next();
 }
 
-module.exports = { authenticateToken };
+// 🔥 Exportamos SOLO la función (como vos la importás)
+module.exports = authenticateToken;
