@@ -1,14 +1,13 @@
+// INDEX.JS — SAFE VERSION
+// -------------------------------------
+// Este archivo solo importa el servidor
+// sin volver a ejecutar app.listen()
+// -------------------------------------
+
 require('dotenv').config();
-const app = require('./server');
 
-const PORT = process.env.PORT || 3000;
+// Importa el servidor ya configurado
+require('./server');
 
-app.listen(PORT, () => {
-  console.log(`
-  ╔════════════════════════════════════╗
-  ║   🎰 POKER FRENZY BACKEND v1.0    ║
-  ║   ✅ Servidor corriendo en puerto ${PORT}   ║
-  ║   🌍 http://localhost:${PORT}                ║
-  ╚════════════════════════════════════╝
-  `);
-});
+// No hacemos app.listen() acá
+console.log("▶️ Poker Frenzy backend inicializado (entry index.js)");
