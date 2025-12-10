@@ -19,8 +19,9 @@ async function verifyEmailLink(req, res) {
   const token = generarToken(user.id, user.email, user.username);
   const refresh = generarRefreshToken(user.id);
 
+  // 🔥 FIX ABSOLUTO → redirección correcta
   return res.redirect(
-    `https://frenzy.poker/ingresar?token=${token}&refresh=${refresh}`
+    `https://frenzy.poker/?token=${token}&refresh=${refresh}`
   );
 }
 
