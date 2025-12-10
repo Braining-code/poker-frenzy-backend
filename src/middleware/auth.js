@@ -24,7 +24,9 @@ function authenticateToken(req, res, next) {
     });
   }
 
-  req.user = decoded; // { userId, email, username }
+  // Ej: decoded = { userId, email, username, iat, exp }
+  req.user = decoded;
+
   next();
 }
 
