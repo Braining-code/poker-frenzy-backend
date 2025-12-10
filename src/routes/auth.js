@@ -4,8 +4,8 @@ const { generarToken, generarRefreshToken, verificarRefreshToken } = require('..
 const { enviarCodigoVerificacion } = require('../services/emailService');
 const { VERIFICATION_CODE_EXPIRY, PASSWORD_MIN_LENGTH } = require('../utils/constants');
 
-// 🔥 IMPORT CORREGIDO (tu middleware exporta una función, no un objeto)
-const authenticateToken = require('../middleware/auth');
+// ✅ IMPORT CORRECTO — desestructurado
+const { authenticateToken } = require('../middleware/auth');
 
 
 // ==========================================
@@ -90,6 +90,7 @@ async function register(req, res) {
       userId: user.id,
       email: user.email
     });
+
   } catch (error) {
     console.error('Error en register:', error);
     res.status(500).json({ 
@@ -243,6 +244,7 @@ async function login(req, res) {
         username: user.username
       }
     });
+
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ 
@@ -297,6 +299,7 @@ async function refresh(req, res) {
       message: 'Token renovado',
       token: newToken
     });
+
   } catch (error) {
     console.error('Error en refresh:', error);
     res.status(500).json({ 
@@ -319,7 +322,7 @@ router.post('/refresh', refresh);
 
 
 // ==========================================
-// GET /me   🔥 FIX COMPLETO
+// GET /me   🔥 100% FIX
 // ==========================================
 router.get('/me', authenticateToken, async (req, res) => {
   try {
@@ -345,4 +348,3 @@ router.get('/me', authenticateToken, async (req, res) => {
 
 
 module.exports = router;
-
