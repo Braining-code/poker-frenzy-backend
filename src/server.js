@@ -3,16 +3,15 @@ const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
 
-const authRoutes = require('./routes/auth.js');
+const authRoutes = require('./routes/auth');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
 // ========================================
-// ROOT DEL PROYECTO (🔥 FIX ENOENT)
+// ROOT DEL PROYECTO (Railway OK)
 // ========================================
-const rootDir = process.cwd(); 
-// /app → correcto en Railway
+const rootDir = path.join(__dirname, '..');
 
 // ========================================
 // SECURITY
@@ -36,20 +35,10 @@ app.use(cors({
     process.env.PRODUCTION_LANDING_URL,
     process.env.PRODUCTION_APP_URL,
     "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:3002"
+    "http://localhost:3001"
   ],
-  credentials: true,
-  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization']
+  credentials: true
 }));
-
-// ========================================
-// HEALTH CHECK
-// ========================================
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date() });
-});
 
 // ========================================
 // API ROUTES
@@ -57,15 +46,28 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 // ========================================
-// STATIC FILES — SERVIR /app
+// PROTEGER DASHBOARD
+// ========================================
+app.get('/dashboard', (req, res) => {
+  const token = req.headers['authorization'] || req.query.token;
+
+  if (!token) {
+    return res.redirect('https://pokerfrenzy.club/ingresar');
+  }
+
+  res.sendFile(path.join(rootDir, 'app', 'dashboard.html'));
+});
+
+// ========================================
+// ARCHIVOS ESTÁTICOS
 // ========================================
 app.use(express.static(path.join(rootDir, 'app')));
 
 // ========================================
-// HOME — servir dashboard.html
+// HOME → redirige al login siempre
 // ========================================
 app.get('/', (req, res) => {
-  res.sendFile(path.join(rootDir, 'app', 'dashboard.html'));
+  res.redirect('https://pokerfrenzy.club/ingresar');
 });
 
 // ========================================
@@ -76,7 +78,7 @@ app.use('*', (req, res) => {
 });
 
 // ========================================
-// ERROR HANDLER
+// GLOBAL ERROR HANDLER
 // ========================================
 app.use(errorHandler);
 
