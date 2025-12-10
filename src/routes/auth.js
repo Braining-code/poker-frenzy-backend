@@ -4,8 +4,8 @@ const { generarToken, generarRefreshToken, verificarRefreshToken } = require('..
 const { enviarCodigoVerificacion } = require('../services/emailService');
 const { VERIFICATION_CODE_EXPIRY, PASSWORD_MIN_LENGTH } = require('../utils/constants');
 
-// ✅ IMPORT CORRECTO — desestructurado
-const { authenticateToken } = require('../middleware/auth');
+// ✅ IMPORT CORRECTO — NO DESTRUCTURAR
+const authenticateToken = require('../middleware/auth');
 
 
 // ==========================================
@@ -322,7 +322,7 @@ router.post('/refresh', refresh);
 
 
 // ==========================================
-// GET /me   🔥 100% FIX
+// GET /me
 // ==========================================
 router.get('/me', authenticateToken, async (req, res) => {
   try {
@@ -345,6 +345,9 @@ router.get('/me', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Error obteniendo usuario' });
   }
 });
+
+
+module.exports = router;
 
 
 module.exports = router;
