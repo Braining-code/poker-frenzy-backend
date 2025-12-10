@@ -62,10 +62,10 @@ app.use('/api/auth', authRoutes);
 app.use(express.static(path.join(rootDir, 'app')));
 
 // ========================================
-// HOME — servir app-completa.html
+// HOME — servir dashboard.html (🔥 FIX FINAL)
 // ========================================
 app.get('/', (req, res) => {
-  res.sendFile(path.join(rootDir, 'app', 'app-completa.html'));
+  res.sendFile(path.join(rootDir, 'app', 'dashboard.html'));
 });
 
 // ========================================
