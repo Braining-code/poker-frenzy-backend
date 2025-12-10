@@ -9,17 +9,6 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 
 // ========================================
-// ROOT DEL PROYECTO (🔥 FIX ENOENT)const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const path = require('path');
-
-const authRoutes = require('./routes/auth.js');
-const errorHandler = require('./middleware/errorHandler');
-
-const app = express();
-
-// ========================================
 // ROOT DEL PROYECTO (🔥 FIX ENOENT)
 // ========================================
 const rootDir = process.cwd(); 
@@ -73,7 +62,7 @@ app.use('/api/auth', authRoutes);
 app.use(express.static(path.join(rootDir, 'app')));
 
 // ========================================
-// HOME — servir dashboard.html (🔥 FIX FINAL)
+// HOME — servir dashboard.html
 // ========================================
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'app', 'dashboard.html'));
@@ -98,3 +87,5 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🔥 Server running on port ${PORT}`);
 });
+
+module.exports = app;
