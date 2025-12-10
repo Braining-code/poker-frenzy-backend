@@ -9,6 +9,17 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 
 // ========================================
+// ROOT DEL PROYECTO (🔥 FIX ENOENT)const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const path = require('path');
+
+const authRoutes = require('./routes/auth.js');
+const errorHandler = require('./middleware/errorHandler');
+
+const app = express();
+
+// ========================================
 // ROOT DEL PROYECTO (🔥 FIX ENOENT)
 // ========================================
 const rootDir = process.cwd(); 
