@@ -9,10 +9,10 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 
 // ========================================
-// PATH BASE DEL PROYECTO (🔥 IMPORTANTE)
+// ROOT DEL PROYECTO (🔥 FIX ENOENT)
 // ========================================
-const rootDir = path.join(__dirname, '..'); 
-// Si __dirname = /app/src → rootDir = /app
+const rootDir = process.cwd(); 
+// /app → correcto en Railway
 
 // ========================================
 // SECURITY
