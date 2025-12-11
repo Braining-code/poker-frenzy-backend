@@ -97,12 +97,4 @@ module.exports = app;
 
 ---
 
-## 📝 SOBRE TUS OTRAS PREGUNTAS:
 
-### ✅ `auth.js` y `errorHandler.js` están PERFECTOS
-**NO los toques** - están bien como están.
-
-### ❌ Página `/activar` (verificación HTML)
-**Ya NO se usa** - eliminamos ese flujo. Ahora es:
-```
-Email → Magic Link Backend → Dashboard directo
