@@ -245,7 +245,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 });
 
 // ==========================================
-// MAGIC LINK — verify-email-link (NUEVO)
+// MAGIC LINK — verify-email-link
 // ==========================================
 router.get('/verify-email-link', async (req, res) => {
   try {
@@ -287,7 +287,6 @@ router.get('/verify-email-link', async (req, res) => {
     const token = generarToken(user.id, email, user.username);
     const refresh = generarRefreshToken(user.id);
 
-    // 🔥 FIX: Redirige directo a frenzy.poker (sin /ingresar de WordPress)
     return res.redirect(
       `https://frenzy.poker?token=${encodeURIComponent(token)}&refresh=${encodeURIComponent(refresh)}`
     );
@@ -299,7 +298,7 @@ router.get('/verify-email-link', async (req, res) => {
 });
 
 // ==========================================
-// MONTAR RUTAS
+// 🔥 MONTAR RUTAS (ESTO FALTABA)
 // ==========================================
 router.post('/register', register);
 router.post('/verify-email', verifyEmail);
