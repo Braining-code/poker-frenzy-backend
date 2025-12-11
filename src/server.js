@@ -30,6 +30,16 @@ app.use(helmet({
   }
 }));
 
+// =======================================================
+// 🔥 NO-CACHE PARA EVITAR VERSIÓN VIEJA EN RAILWAY
+// =======================================================
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 // ========================================
 // BODY PARSING
 // ========================================
@@ -60,21 +70,35 @@ app.use(cors({
 // ========================================
 app.use('/api/auth', authRoutes);
 
-// ========================================
+// =======================================================
 // ARCHIVOS ESTÁTICOS
-// ========================================
-app.use(express.static(path.join(rootDir, 'app')));
+// =======================================================
+app.use(express.static(path.join(rootDir, 'app'), {
+  etag: false,
+  lastModified: false,
+  cacheControl: false
+}));
 
-// ========================================
-// HOME  ✅ MODIFICADO
-// ========================================
+// =======================================================
+// HOME → sirve SIEMPRE dashboard-v2.html
+// =======================================================
 app.get('/', (req, res) => {
-  res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'));
+  res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'), {
+    headers: {
+      'Cache-Control': 'no-store'
+    }
+  });
 });
 
-// ========================================
+// =======================================================
+// ⚠️ FIX: NO CAPTURAR RUTAS QUE LLEVEN PARÁMETROS
+// Especialmente verify-email-link?email=xx&code=xxx
+// =======================================================
+app.get('/api/*', (req, res, next) => next());
+
+// =======================================================
 // 404
-// ========================================
+// =======================================================
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
@@ -93,4 +117,3 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
-
