@@ -303,7 +303,7 @@ router.get("/me", authenticateToken, async (req, res) => {
 });
 
 // ==========================================
-// MAGIC LINK FINAL
+// MAGIC LINK - ACTUALIZADO PARA app.frenzy.poker
 // ==========================================
 router.get("/verify-email-link", async (req, res) => {
   try {
@@ -347,10 +347,9 @@ router.get("/verify-email-link", async (req, res) => {
     const token = generarToken(user.id, emailNorm, user.username);
     const refresh = generarRefreshToken(user.id);
 
+    // 🔥 CAMBIO: Redirige a app.frenzy.poker con hash
     return res.redirect(
-      `https://frenzy.poker/app/dashboard-v2.html?token=${encodeURIComponent(
-        token
-      )}&refresh=${encodeURIComponent(refresh)}`
+      `https://app.frenzy.poker#token=${encodeURIComponent(token)}&refresh=${encodeURIComponent(refresh)}`
     );
 
   } catch (error) {
