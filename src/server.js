@@ -55,7 +55,7 @@ app.use(express.static(path.join(rootDir, 'app')));
 // HOME → Sirve dashboard directamente
 // ========================================
 app.get('/', (req, res) => {
-  res.sendFile(path.join(rootDir, 'app', 'app-completa.html'));
+  res.sendFile(path.join(rootDir, 'app', 'dashboard.html'));
 });
 
 // ========================================
