@@ -170,6 +170,7 @@ async function login(req, res) {
     }
 
     const passwordMatch = await comparePassword(password, user.password_hash);
+
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Email o contraseña incorrectos' });
     }
@@ -245,7 +246,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 });
 
 // ==========================================
-// MAGIC LINK — verify-email-link (FIXED)
+// MAGIC LINK — verify-email-link (FIXED FINAL VERSION)
 // ==========================================
 router.get('/verify-email-link', async (req, res) => {
   try {
@@ -289,8 +290,9 @@ router.get('/verify-email-link', async (req, res) => {
     const token = generarToken(user.id, email, user.username);
     const refresh = generarRefreshToken(user.id);
 
+    // 🚀 REDIRIGE AL DASHBOARD REAL, NO A WORDPRESS
     return res.redirect(
-      `https://frenzy.poker?token=${encodeURIComponent(token)}&refresh=${encodeURIComponent(refresh)}`
+      `https://web-production-e4083.up.railway.app/dashboard-v2.html?token=${encodeURIComponent(token)}&refresh=${encodeURIComponent(refresh)}`
     );
 
   } catch (error) {
@@ -300,7 +302,7 @@ router.get('/verify-email-link', async (req, res) => {
 });
 
 // ==========================================
-// 🔥 MONTAR RUTAS (INCLUYENDO MAGIC LINK GET)
+// MONTAR RUTAS
 // ==========================================
 router.post('/register', register);
 router.post('/verify-email', verifyEmail);
