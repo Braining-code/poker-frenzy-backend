@@ -1,11 +1,21 @@
 const db = require('../config/database');
-const { hashPassword, comparePassword, generarCodigoVerificacion } = require('../services/cryptoService');
-const { generarToken, generarRefreshToken, verificarRefreshToken } = require('../services/jwtService');
+const { 
+  hashPassword, 
+  comparePassword, 
+  generarCodigoVerificacion 
+} = require('../services/cryptoService');
+
+const { 
+  generarToken, 
+  generarRefreshToken, 
+  verificarRefreshToken 
+} = require('../services/jwtService');
+
 const { enviarCodigoVerificacion } = require('../services/emailService');
 const { VERIFICATION_CODE_EXPIRY, PASSWORD_MIN_LENGTH } = require('../utils/constants');
-
-// ✅ IMPORT CORRECTO — NO DESTRUCTURAR
 const authenticateToken = require('../middleware/auth');
+
+const router = require('express').Router();
 
 
 // ==========================================
@@ -16,48 +26,30 @@ async function register(req, res) {
     const { email, username, password, agreeTerms } = req.body;
 
     if (!email || !username || !password) {
-      return res.status(400).json({ 
-        error: 'Email, username y password requeridos',
-        code: 'MISSING_FIELDS'
-      });
+      return res.status(400).json({ error: 'Email, username y password requeridos', code: 'MISSING_FIELDS' });
     }
 
     if (!agreeTerms) {
-      return res.status(400).json({ 
-        error: 'Debes aceptar los términos y condiciones',
-        code: 'TERMS_NOT_ACCEPTED'
-      });
+      return res.status(400).json({ error: 'Debes aceptar los términos y condiciones', code: 'TERMS_NOT_ACCEPTED' });
     }
 
     if (password.length < PASSWORD_MIN_LENGTH) {
-      return res.status(400).json({ 
-        error: `La contraseña debe tener al menos ${PASSWORD_MIN_LENGTH} caracteres`,
-        code: 'PASSWORD_TOO_SHORT'
-      });
+      return res.status(400).json({ error: `La contraseña debe tener al menos ${PASSWORD_MIN_LENGTH} caracteres`, code: 'PASSWORD_TOO_SHORT' });
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ 
-        error: 'Email inválido',
-        code: 'INVALID_EMAIL'
-      });
+      return res.status(400).json({ error: 'Email inválido', code: 'INVALID_EMAIL' });
     }
 
     const existingEmail = await db.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
     if (existingEmail.rows.length > 0) {
-      return res.status(400).json({ 
-        error: 'Email ya registrado',
-        code: 'EMAIL_EXISTS'
-      });
+      return res.status(400).json({ error: 'Email ya registrado', code: 'EMAIL_EXISTS' });
     }
 
     const existingUsername = await db.query('SELECT id FROM users WHERE username = $1', [username.toLowerCase()]);
     if (existingUsername.rows.length > 0) {
-      return res.status(400).json({ 
-        error: 'Username ya existe',
-        code: 'USERNAME_EXISTS'
-      });
+      return res.status(400).json({ error: 'Username ya existe', code: 'USERNAME_EXISTS' });
     }
 
     const passwordHash = await hashPassword(password);
@@ -78,10 +70,7 @@ async function register(req, res) {
     } catch (emailError) {
       console.error('Error enviando email:', emailError.message);
       await db.query('DELETE FROM users WHERE id = $1', [user.id]);
-      return res.status(500).json({ 
-        error: 'Error al enviar email de verificación. Por favor intenta de nuevo.',
-        code: 'EMAIL_SEND_FAILED'
-      });
+      return res.status(500).json({ error: 'Error al enviar email de verificación.', code: 'EMAIL_SEND_FAILED' });
     }
 
     res.status(201).json({
@@ -93,55 +82,40 @@ async function register(req, res) {
 
   } catch (error) {
     console.error('Error en register:', error);
-    res.status(500).json({ 
-      error: 'Error en el registro',
-      code: 'REGISTER_ERROR'
-    });
+    res.status(500).json({ error: 'Error en el registro', code: 'REGISTER_ERROR' });
   }
 }
 
 
 
 // ==========================================
-// VERIFY EMAIL + AUTO LOGIN
+// VERIFY EMAIL (USADO SOLO POR /activar, YA NO LO USARÁS)
 // ==========================================
 async function verifyEmail(req, res) {
   try {
     const { email, code } = req.body;
 
     if (!email || !code) {
-      return res.status(400).json({ 
-        error: 'Email y código requeridos',
-        code: 'MISSING_FIELDS'
-      });
+      return res.status(400).json({ error: 'Email y código requeridos', code: 'MISSING_FIELDS' });
     }
 
     const result = await db.query(
-      'SELECT id, verification_code, verification_code_expires FROM users WHERE email = $1',
+      'SELECT id, verification_code, verification_code_expires, username FROM users WHERE email = $1',
       [email.toLowerCase()]
     );
 
     if (result.rows.length === 0) {
-      return res.status(400).json({ 
-        error: 'Usuario no encontrado',
-        code: 'USER_NOT_FOUND'
-      });
+      return res.status(400).json({ error: 'Usuario no encontrado', code: 'USER_NOT_FOUND' });
     }
 
     const user = result.rows[0];
 
     if (user.verification_code !== code) {
-      return res.status(400).json({ 
-        error: 'Código incorrecto',
-        code: 'INVALID_CODE'
-      });
+      return res.status(400).json({ error: 'Código incorrecto', code: 'INVALID_CODE' });
     }
 
     if (new Date() > new Date(user.verification_code_expires)) {
-      return res.status(400).json({ 
-        error: 'Código expirado. Solicita uno nuevo.',
-        code: 'CODE_EXPIRED'
-      });
+      return res.status(400).json({ error: 'Código expirado', code: 'CODE_EXPIRED' });
     }
 
     await db.query(
@@ -149,15 +123,8 @@ async function verifyEmail(req, res) {
       [user.id]
     );
 
-    const userData = await db.query(
-      'SELECT id, email, username FROM users WHERE id = $1',
-      [user.id]
-    );
-
-    const u = userData.rows[0];
-
-    const token = generarToken(u.id, u.email, u.username);
-    const refreshToken = generarRefreshToken(u.id);
+    const token = generarToken(user.id, email, user.username);
+    const refreshToken = generarRefreshToken(user.id);
 
     return res.json({
       success: true,
@@ -165,18 +132,15 @@ async function verifyEmail(req, res) {
       token,
       refreshToken,
       user: {
-        id: u.id,
-        email: u.email,
-        username: u.username
+        id: user.id,
+        email,
+        username: user.username
       }
     });
 
   } catch (error) {
     console.error('Error en verifyEmail:', error);
-    res.status(500).json({ 
-      error: 'Error verificando email',
-      code: 'VERIFY_ERROR'
-    });
+    res.status(500).json({ error: 'Error verificando email', code: 'VERIFY_ERROR' });
   }
 }
 
@@ -190,10 +154,7 @@ async function login(req, res) {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ 
-        error: 'Email y password requeridos',
-        code: 'MISSING_FIELDS'
-      });
+      return res.status(400).json({ error: 'Email y password requeridos', code: 'MISSING_FIELDS' });
     }
 
     const result = await db.query(
@@ -202,27 +163,18 @@ async function login(req, res) {
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ 
-        error: 'Email o contraseña incorrectos',
-        code: 'INVALID_CREDENTIALS'
-      });
+      return res.status(401).json({ error: 'Email o contraseña incorrectos', code: 'INVALID_CREDENTIALS' });
     }
 
     const user = result.rows[0];
 
     if (!user.email_verified) {
-      return res.status(403).json({ 
-        error: 'Email no verificado. Revisa tu correo.',
-        code: 'EMAIL_NOT_VERIFIED'
-      });
+      return res.status(403).json({ error: 'Email no verificado. Revisa tu correo.', code: 'EMAIL_NOT_VERIFIED' });
     }
 
     const passwordMatch = await comparePassword(password, user.password_hash);
     if (!passwordMatch) {
-      return res.status(401).json({ 
-        error: 'Email o contraseña incorrectos',
-        code: 'INVALID_CREDENTIALS'
-      });
+      return res.status(401).json({ error: 'Email o contraseña incorrectos', code: 'INVALID_CREDENTIALS' });
     }
 
     const token = generarToken(user.id, email, user.username);
@@ -240,17 +192,14 @@ async function login(req, res) {
       refreshToken,
       user: {
         id: user.id,
-        email: email,
+        email,
         username: user.username
       }
     });
 
   } catch (error) {
     console.error('Error en login:', error);
-    res.status(500).json({ 
-      error: 'Error en el login',
-      code: 'LOGIN_ERROR'
-    });
+    res.status(500).json({ error: 'Error en el login', code: 'LOGIN_ERROR' });
   }
 }
 
@@ -264,19 +213,13 @@ async function refresh(req, res) {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return res.status(400).json({ 
-        error: 'Refresh token requerido',
-        code: 'MISSING_REFRESH_TOKEN'
-      });
+      return res.status(400).json({ error: 'Refresh token requerido', code: 'MISSING_REFRESH_TOKEN' });
     }
 
     const decoded = verificarRefreshToken(refreshToken);
 
     if (!decoded) {
-      return res.status(401).json({ 
-        error: 'Refresh token inválido o expirado',
-        code: 'INVALID_REFRESH_TOKEN'
-      });
+      return res.status(401).json({ error: 'Refresh token inválido o expirado', code: 'INVALID_REFRESH_TOKEN' });
     }
 
     const result = await db.query(
@@ -285,10 +228,7 @@ async function refresh(req, res) {
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ 
-        error: 'Usuario no encontrado',
-        code: 'USER_NOT_FOUND'
-      });
+      return res.status(401).json({ error: 'Usuario no encontrado', code: 'USER_NOT_FOUND' });
     }
 
     const user = result.rows[0];
@@ -302,23 +242,10 @@ async function refresh(req, res) {
 
   } catch (error) {
     console.error('Error en refresh:', error);
-    res.status(500).json({ 
-      error: 'Error renovando token',
-      code: 'REFRESH_ERROR'
-    });
+    res.status(500).json({ error: 'Error renovando token', code: 'REFRESH_ERROR' });
   }
 }
 
-
-
-// ==========================================
-// ROUTER
-// ==========================================
-const router = require('express').Router();
-router.post('/register', register);
-router.post('/verify-email', verifyEmail);
-router.post('/login', login);
-router.post('/refresh', refresh);
 
 
 // ==========================================
@@ -347,7 +274,55 @@ router.get('/me', authenticateToken, async (req, res) => {
 });
 
 
-module.exports = router;
+
+// ==========================================
+// MAGIC LINK: VERIFY EMAIL + REDIRECT
+// ==========================================
+router.get('/verify-email-link', async (req, res) => {
+  try {
+    const { email, code } = req.query;
+
+    if (!email || !code) {
+      return res.send("Token inválido o incompleto.");
+    }
+
+    const result = await db.query(
+      'SELECT id, username, verification_code, verification_code_expires FROM users WHERE email = $1',
+      [email.toLowerCase()]
+    );
+
+    if (result.rows.length === 0) {
+      return res.send("Usuario no encontrado.");
+    }
+
+    const user = result.rows[0];
+
+    if (user.verification_code !== code) {
+      return res.send("Código incorrecto.");
+    }
+
+    if (new Date() > new Date(user.verification_code_expires)) {
+      return res.send("Código expirado.");
+    }
+
+    await db.query(
+      'UPDATE users SET email_verified = true, verification_code = NULL, verification_code_expires = NULL WHERE id = $1',
+      [user.id]
+    );
+
+    const token = generarToken(user.id, email, user.username);
+    const refresh = generarRefreshToken(user.id);
+
+    return res.redirect(
+      `https://pokerfrenzy.club/ingresar?token=${encodeURIComponent(token)}&refresh=${encodeURIComponent(refresh)}`
+    );
+
+  } catch (error) {
+    console.error("Error en verify-email-link:", error);
+    return res.send("Error interno al activar la cuenta.");
+  }
+});
 
 
 module.exports = router;
+
