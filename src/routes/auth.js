@@ -15,9 +15,12 @@ const {
 } = require('../services/jwtService');
 
 const { enviarCodigoVerificacion } = require('../services/emailService');
-const { VERIFICATION_CODE_EXPIRY, PASSWORD_MIN_LENGTH } = require('../utils/constants');
-const authenticateToken = require('../middleware/auth');
+const {
+  VERIFICATION_CODE_EXPIRY,
+  PASSWORD_MIN_LENGTH
+} = require('../utils/constants');
 
+const authenticateToken = require('../middleware/auth');
 const router = require('express').Router();
 
 // ==========================================
@@ -32,7 +35,9 @@ async function register(req, res) {
     }
 
     if (!agreeTerms) {
-      return res.status(400).json({ error: 'Debes aceptar los términos y condiciones' });
+      return res.status(400).json({
+        error: 'Debes aceptar los términos y condiciones'
+      });
     }
 
     if (password.length < PASSWORD_MIN_LENGTH) {
@@ -46,21 +51,27 @@ async function register(req, res) {
       return res.status(400).json({ error: 'Email inválido' });
     }
 
-    const existingEmail = await db.query(
+    // Normalización
+    const emailNorm = email.toLowerCase();
+    const usernameNorm = username.toLowerCase();
+
+    // Email duplicado
+    const emailExists = await db.query(
       'SELECT id FROM users WHERE email = $1',
-      [email.toLowerCase()]
+      [emailNorm]
     );
 
-    if (existingEmail.rows.length > 0) {
+    if (emailExists.rows.length > 0) {
       return res.status(400).json({ error: 'Email ya registrado' });
     }
 
-    const existingUsername = await db.query(
+    // Username duplicado
+    const usernameExists = await db.query(
       'SELECT id FROM users WHERE username = $1',
-      [username.toLowerCase()]
+      [usernameNorm]
     );
 
-    if (existingUsername.rows.length > 0) {
+    if (usernameExists.rows.length > 0) {
       return res.status(400).json({ error: 'Username ya existe' });
     }
 
@@ -72,21 +83,22 @@ async function register(req, res) {
       `INSERT INTO users (email, username, password_hash, verification_code, verification_code_expires, fecha_registro)
        VALUES ($1, $2, $3, $4, $5, NOW())
        RETURNING id, email, username`,
-      [email.toLowerCase(), username.toLowerCase(), passwordHash, codigo, codigoExpiry]
+      [emailNorm, usernameNorm, passwordHash, codigo, codigoExpiry]
     );
 
     const user = result.rows[0];
 
+    // Enviar mail
     try {
-      await enviarCodigoVerificacion(email, codigo);
-    } catch (error) {
+      await enviarCodigoVerificacion(emailNorm, codigo);
+    } catch (err) {
       await db.query('DELETE FROM users WHERE id = $1', [user.id]);
       return res.status(500).json({ error: 'Error enviando email de verificación' });
     }
 
     res.status(201).json({
       success: true,
-      message: 'Registro exitoso. Revisa tu email para verificar',
+      message: 'Registro exitoso. Revisa tu email para verificar tu cuenta',
       email: user.email
     });
 
@@ -97,7 +109,7 @@ async function register(req, res) {
 }
 
 // ==========================================
-// VERIFY EMAIL (legacy POST)
+// VERIFY EMAIL (MODELO POST LEGACY)
 // ==========================================
 async function verifyEmail(req, res) {
   try {
@@ -107,9 +119,12 @@ async function verifyEmail(req, res) {
       return res.status(400).json({ error: 'Email y código requeridos' });
     }
 
+    const emailNorm = email.toLowerCase();
+
     const result = await db.query(
-      'SELECT id, verification_code, verification_code_expires, username FROM users WHERE email = $1',
-      [email.toLowerCase()]
+      `SELECT id, verification_code, verification_code_expires, username
+       FROM users WHERE email = $1`,
+      [emailNorm]
     );
 
     if (result.rows.length === 0) {
@@ -127,11 +142,13 @@ async function verifyEmail(req, res) {
     }
 
     await db.query(
-      'UPDATE users SET email_verified = true, verification_code = NULL, verification_code_expires = NULL WHERE id = $1',
+      `UPDATE users 
+       SET email_verified = true, verification_code = NULL, verification_code_expires = NULL
+       WHERE id = $1`,
       [user.id]
     );
 
-    const token = generarToken(user.id, email, user.username);
+    const token = generarToken(user.id, emailNorm, user.username);
     const refreshToken = generarRefreshToken(user.id);
 
     return res.json({
@@ -153,10 +170,12 @@ async function verifyEmail(req, res) {
 async function login(req, res) {
   try {
     const { email, password } = req.body;
+    const emailNorm = email.toLowerCase();
 
     const result = await db.query(
-      'SELECT id, username, email_verified, password_hash FROM users WHERE email = $1',
-      [email.toLowerCase()]
+      `SELECT id, username, email_verified, password_hash 
+       FROM users WHERE email = $1`,
+      [emailNorm]
     );
 
     if (result.rows.length === 0) {
@@ -169,16 +188,16 @@ async function login(req, res) {
       return res.status(403).json({ error: 'Email no verificado' });
     }
 
-    const passwordMatch = await comparePassword(password, user.password_hash);
+    const match = await comparePassword(password, user.password_hash);
 
-    if (!passwordMatch) {
+    if (!match) {
       return res.status(401).json({ error: 'Email o contraseña incorrectos' });
     }
 
-    const token = generarToken(user.id, email, user.username);
+    const token = generarToken(user.id, emailNorm, user.username);
     const refreshToken = generarRefreshToken(user.id);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Login exitoso',
       token,
@@ -186,7 +205,7 @@ async function login(req, res) {
       user: {
         id: user.id,
         username: user.username,
-        email: email
+        email: emailNorm
       }
     });
 
@@ -197,7 +216,7 @@ async function login(req, res) {
 }
 
 // ==========================================
-// REFRESH
+// REFRESH TOKEN
 // ==========================================
 async function refresh(req, res) {
   try {
@@ -209,14 +228,15 @@ async function refresh(req, res) {
     }
 
     const result = await db.query(
-      'SELECT email, username FROM users WHERE id = $1',
+      `SELECT email, username 
+       FROM users WHERE id = $1`,
       [decoded.userId]
     );
 
     const user = result.rows[0];
     const newToken = generarToken(decoded.userId, user.email, user.username);
 
-    res.json({
+    return res.json({
       success: true,
       token: newToken
     });
@@ -233,11 +253,15 @@ async function refresh(req, res) {
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, email, username, email_verified FROM users WHERE id = $1',
+      `SELECT id, email, username, email_verified 
+       FROM users WHERE id = $1`,
       [req.user.userId]
     );
 
-    res.json({ success: true, user: result.rows[0] });
+    return res.json({
+      success: true,
+      user: result.rows[0]
+    });
 
   } catch (error) {
     console.error('Error en /me:', error);
@@ -246,7 +270,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 });
 
 // ==========================================
-// MAGIC LINK — verify-email-link (FINAL)
+// MAGIC LINK FINAL
 // ==========================================
 router.get('/verify-email-link', async (req, res) => {
   try {
@@ -301,7 +325,7 @@ router.get('/verify-email-link', async (req, res) => {
 });
 
 // ==========================================
-// MONTAR RUTAS
+// RUTAS PÚBLICAS
 // ==========================================
 router.post('/register', register);
 router.post('/verify-email', verifyEmail);
