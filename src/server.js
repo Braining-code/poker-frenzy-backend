@@ -12,7 +12,7 @@ const app = express();
 const rootDir = path.join(__dirname, '..');
 
 // ========================================
-// SECURITY - CSP CORREGIDO
+// SECURITY
 // ========================================
 app.use(helmet({
   contentSecurityPolicy: {
@@ -93,8 +93,3 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
-```
-
----
-
-
