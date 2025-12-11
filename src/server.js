@@ -2,10 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
-
 const authRoutes = require('./routes/auth');
 const errorHandler = require('./middleware/errorHandler');
-
 const app = express();
 
 // ========================================
@@ -30,6 +28,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors({
   origin: [
     "https://pokerfrenzy.club",
+    "https://www.pokerfrenzy.club",
     "https://frenzy.poker",
     "https://www.frenzy.poker",
     process.env.PRODUCTION_LANDING_URL,
@@ -37,7 +36,9 @@ app.use(cors({
     "http://localhost:3000",
     "http://localhost:3001"
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // ========================================
@@ -46,28 +47,15 @@ app.use(cors({
 app.use('/api/auth', authRoutes);
 
 // ========================================
-// PROTEGER DASHBOARD
-// ========================================
-app.get('/dashboard', (req, res) => {
-  const token = req.headers['authorization'] || req.query.token;
-
-  if (!token) {
-    return res.redirect('https://pokerfrenzy.club/ingresar');
-  }
-
-  res.sendFile(path.join(rootDir, 'app', 'dashboard.html'));
-});
-
-// ========================================
-// ARCHIVOS ESTÁTICOS
+// ARCHIVOS ESTÁTICOS (antes de rutas)
 // ========================================
 app.use(express.static(path.join(rootDir, 'app')));
 
 // ========================================
-// HOME → redirige al login siempre
+// HOME → Sirve dashboard directamente
 // ========================================
 app.get('/', (req, res) => {
-  res.redirect('https://pokerfrenzy.club/ingresar');
+  res.sendFile(path.join(rootDir, 'app', 'app-completa.html'));
 });
 
 // ========================================
