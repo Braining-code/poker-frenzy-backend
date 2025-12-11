@@ -15,10 +15,7 @@ const {
 } = require('../services/jwtService');
 
 const { enviarCodigoVerificacion } = require('../services/emailService');
-const {
-  VERIFICATION_CODE_EXPIRY,
-  PASSWORD_MIN_LENGTH
-} = require('../utils/constants');
+const { VERIFICATION_CODE_EXPIRY, PASSWORD_MIN_LENGTH } = require('../utils/constants');
 
 const authenticateToken = require('../middleware/auth');
 const router = require('express').Router();
@@ -31,13 +28,11 @@ async function register(req, res) {
     const { email, username, password, agreeTerms } = req.body;
 
     if (!email || !username || !password) {
-      return res.status(400).json({ error: 'Email, username y password requeridos' });
+      return res.status(400).json({ error: "Email, username y password requeridos" });
     }
 
     if (!agreeTerms) {
-      return res.status(400).json({
-        error: 'Debes aceptar los términos y condiciones'
-      });
+      return res.status(400).json({ error: "Debes aceptar los términos y condiciones" });
     }
 
     if (password.length < PASSWORD_MIN_LENGTH) {
@@ -46,33 +41,28 @@ async function register(req, res) {
       });
     }
 
+    const emailNorm = email.toLowerCase().trim();
+    const usernameNorm = username.toLowerCase().trim();
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Email inválido' });
+    if (!emailRegex.test(emailNorm)) {
+      return res.status(400).json({ error: "Email inválido" });
     }
 
-    // Normalización
-    const emailNorm = email.toLowerCase();
-    const usernameNorm = username.toLowerCase();
-
-    // Email duplicado
     const emailExists = await db.query(
-      'SELECT id FROM users WHERE email = $1',
+      "SELECT id FROM users WHERE email = $1",
       [emailNorm]
     );
-
     if (emailExists.rows.length > 0) {
-      return res.status(400).json({ error: 'Email ya registrado' });
+      return res.status(400).json({ error: "Email ya registrado" });
     }
 
-    // Username duplicado
     const usernameExists = await db.query(
-      'SELECT id FROM users WHERE username = $1',
+      "SELECT id FROM users WHERE username = $1",
       [usernameNorm]
     );
-
     if (usernameExists.rows.length > 0) {
-      return res.status(400).json({ error: 'Username ya existe' });
+      return res.status(400).json({ error: "Username ya existe" });
     }
 
     const passwordHash = await hashPassword(password);
@@ -80,46 +70,90 @@ async function register(req, res) {
     const codigoExpiry = new Date(Date.now() + VERIFICATION_CODE_EXPIRY);
 
     const result = await db.query(
-      `INSERT INTO users (email, username, password_hash, verification_code, verification_code_expires, fecha_registro)
+      `INSERT INTO users 
+       (email, username, password_hash, verification_code, verification_code_expires, fecha_registro)
        VALUES ($1, $2, $3, $4, $5, NOW())
        RETURNING id, email, username`,
       [emailNorm, usernameNorm, passwordHash, codigo, codigoExpiry]
     );
 
-    const user = result.rows[0];
-
-    // Enviar mail
     try {
       await enviarCodigoVerificacion(emailNorm, codigo);
     } catch (err) {
-      await db.query('DELETE FROM users WHERE id = $1', [user.id]);
-      return res.status(500).json({ error: 'Error enviando email de verificación' });
+      await db.query("DELETE FROM users WHERE id = $1", [result.rows[0].id]);
+      return res.status(500).json({ error: "Error enviando email de verificación" });
     }
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: 'Registro exitoso. Revisa tu email para verificar tu cuenta',
-      email: user.email
+      message: "Registro exitoso. Revisa tu email",
+      email: emailNorm
     });
 
   } catch (error) {
-    console.error('Error en register:', error);
-    res.status(500).json({ error: 'Error en el registro' });
+    console.error("Error en register:", error);
+    return res.status(500).json({ error: "Error en el registro" });
   }
 }
 
 // ==========================================
-// VERIFY EMAIL (MODELO POST LEGACY)
+// RESEND VERIFICATION LINK
+// ==========================================
+async function resendVerification(req, res) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: "Email requerido" });
+    }
+
+    const emailNorm = email.toLowerCase().trim();
+
+    const result = await db.query(
+      `SELECT id FROM users WHERE email = $1`,
+      [emailNorm]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    const user = result.rows[0];
+    const codigo = generarCodigoVerificacion();
+    const expiry = new Date(Date.now() + VERIFICATION_CODE_EXPIRY);
+
+    await db.query(
+      `UPDATE users 
+       SET verification_code = $1, verification_code_expires = $2
+       WHERE id = $3`,
+      [codigo, expiry, user.id]
+    );
+
+    await enviarCodigoVerificacion(emailNorm, codigo);
+
+    return res.json({
+      success: true,
+      message: "Link reenviado correctamente"
+    });
+
+  } catch (error) {
+    console.error("Error en resendVerification:", error);
+    return res.status(500).json({ error: "Error reenviando código" });
+  }
+}
+
+// ==========================================
+// VERIFY EMAIL — POST LEGACY
 // ==========================================
 async function verifyEmail(req, res) {
   try {
     const { email, code } = req.body;
 
     if (!email || !code) {
-      return res.status(400).json({ error: 'Email y código requeridos' });
+      return res.status(400).json({ error: "Email y código requeridos" });
     }
 
-    const emailNorm = email.toLowerCase();
+    const emailNorm = email.toLowerCase().trim();
 
     const result = await db.query(
       `SELECT id, verification_code, verification_code_expires, username
@@ -128,21 +162,21 @@ async function verifyEmail(req, res) {
     );
 
     if (result.rows.length === 0) {
-      return res.status(400).json({ error: 'Usuario no encontrado' });
+      return res.status(400).json({ error: "Usuario no encontrado" });
     }
 
     const user = result.rows[0];
 
     if (user.verification_code !== code) {
-      return res.status(400).json({ error: 'Código incorrecto' });
+      return res.status(400).json({ error: "Código incorrecto" });
     }
 
     if (new Date() > new Date(user.verification_code_expires)) {
-      return res.status(400).json({ error: 'Código expirado' });
+      return res.status(400).json({ error: "Código expirado" });
     }
 
     await db.query(
-      `UPDATE users 
+      `UPDATE users
        SET email_verified = true, verification_code = NULL, verification_code_expires = NULL
        WHERE id = $1`,
       [user.id]
@@ -153,14 +187,14 @@ async function verifyEmail(req, res) {
 
     return res.json({
       success: true,
-      message: 'Email verificado',
+      message: "Verificado correctamente",
       token,
       refreshToken
     });
 
   } catch (error) {
-    console.error('Error en verifyEmail:', error);
-    res.status(500).json({ error: 'Error verificando email' });
+    console.error("Error en verifyEmail:", error);
+    return res.status(500).json({ error: "Error verificando email" });
   }
 }
 
@@ -170,28 +204,27 @@ async function verifyEmail(req, res) {
 async function login(req, res) {
   try {
     const { email, password } = req.body;
-    const emailNorm = email.toLowerCase();
+    const emailNorm = email.toLowerCase().trim();
 
     const result = await db.query(
-      `SELECT id, username, email_verified, password_hash 
+      `SELECT id, username, email_verified, password_hash
        FROM users WHERE email = $1`,
       [emailNorm]
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Email o contraseña incorrectos' });
+      return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
 
     const user = result.rows[0];
 
     if (!user.email_verified) {
-      return res.status(403).json({ error: 'Email no verificado' });
+      return res.status(403).json({ error: "Email no verificado" });
     }
 
     const match = await comparePassword(password, user.password_hash);
-
     if (!match) {
-      return res.status(401).json({ error: 'Email o contraseña incorrectos' });
+      return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
 
     const token = generarToken(user.id, emailNorm, user.username);
@@ -199,7 +232,7 @@ async function login(req, res) {
 
     return res.json({
       success: true,
-      message: 'Login exitoso',
+      message: "Login exitoso",
       token,
       refreshToken,
       user: {
@@ -210,8 +243,8 @@ async function login(req, res) {
     });
 
   } catch (error) {
-    console.error('Error en login:', error);
-    res.status(500).json({ error: 'Error en el login' });
+    console.error("Error en login:", error);
+    return res.status(500).json({ error: "Error en el login" });
   }
 }
 
@@ -224,12 +257,11 @@ async function refresh(req, res) {
 
     const decoded = verificarRefreshToken(refreshToken);
     if (!decoded) {
-      return res.status(401).json({ error: 'Refresh token inválido' });
+      return res.status(401).json({ error: "Refresh token inválido" });
     }
 
     const result = await db.query(
-      `SELECT email, username 
-       FROM users WHERE id = $1`,
+      `SELECT email, username FROM users WHERE id = $1`,
       [decoded.userId]
     );
 
@@ -242,18 +274,20 @@ async function refresh(req, res) {
     });
 
   } catch (error) {
-    console.error('Error en refresh:', error);
-    res.status(500).json({ error: 'Error renovando token' });
+    console.error("Error en refresh:", error);
+    return res
+      .status(500)
+      .json({ error: "Error renovando token" });
   }
 }
 
 // ==========================================
 // GET /me
 // ==========================================
-router.get('/me', authenticateToken, async (req, res) => {
+router.get("/me", authenticateToken, async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT id, email, username, email_verified 
+      `SELECT id, email, username, email_verified
        FROM users WHERE id = $1`,
       [req.user.userId]
     );
@@ -262,19 +296,18 @@ router.get('/me', authenticateToken, async (req, res) => {
       success: true,
       user: result.rows[0]
     });
-
   } catch (error) {
-    console.error('Error en /me:', error);
-    res.status(500).json({ error: 'Error obteniendo usuario' });
+    console.error("Error en /me:", error);
+    return res.status(500).json({ error: "Error obteniendo usuario" });
   }
 });
 
 // ==========================================
 // MAGIC LINK FINAL
 // ==========================================
-router.get('/verify-email-link', async (req, res) => {
+router.get("/verify-email-link", async (req, res) => {
   try {
-    res.set('Cache-Control', 'no-store');
+    res.set("Cache-Control", "no-store");
 
     let { email, code } = req.query;
 
@@ -282,12 +315,12 @@ router.get('/verify-email-link', async (req, res) => {
       return res.status(400).send("Token inválido o incompleto.");
     }
 
-    email = email.toLowerCase().trim();
+    const emailNorm = email.toLowerCase().trim();
 
     const result = await db.query(
       `SELECT id, username, verification_code, verification_code_expires
        FROM users WHERE email = $1`,
-      [email]
+      [emailNorm]
     );
 
     if (result.rows.length === 0) {
@@ -306,16 +339,18 @@ router.get('/verify-email-link', async (req, res) => {
 
     await db.query(
       `UPDATE users 
-       SET email_verified = true, verification_code = NULL, verification_code_expires = NULL 
+       SET email_verified = true, verification_code = NULL, verification_code_expires = NULL
        WHERE id = $1`,
       [user.id]
     );
 
-    const token = generarToken(user.id, email, user.username);
+    const token = generarToken(user.id, emailNorm, user.username);
     const refresh = generarRefreshToken(user.id);
 
     return res.redirect(
-      `https://frenzy.poker/app/dashboard-v2.html?token=${encodeURIComponent(token)}&refresh=${encodeURIComponent(refresh)}`
+      `https://frenzy.poker/app/dashboard-v2.html?token=${encodeURIComponent(
+        token
+      )}&refresh=${encodeURIComponent(refresh)}`
     );
 
   } catch (error) {
@@ -327,9 +362,10 @@ router.get('/verify-email-link', async (req, res) => {
 // ==========================================
 // RUTAS PÚBLICAS
 // ==========================================
-router.post('/register', register);
-router.post('/verify-email', verifyEmail);
-router.post('/login', login);
-router.post('/refresh', refresh);
+router.post("/register", register);
+router.post("/register/resend", resendVerification);
+router.post("/verify-email", verifyEmail);
+router.post("/login", login);
+router.post("/refresh", refresh);
 
 module.exports = router;
