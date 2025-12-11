@@ -97,7 +97,7 @@ async function register(req, res) {
 }
 
 // ==========================================
-// VERIFY EMAIL (versión vieja — ya no se usa)
+// VERIFY EMAIL (legacy POST)
 // ==========================================
 async function verifyEmail(req, res) {
   try {
@@ -245,14 +245,16 @@ router.get('/me', authenticateToken, async (req, res) => {
 });
 
 // ==========================================
-// MAGIC LINK — verify-email-link
+// MAGIC LINK — verify-email-link (FIXED)
 // ==========================================
 router.get('/verify-email-link', async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store');
+
     let { email, code } = req.query;
 
     if (!email || !code) {
-      return res.send("Token inválido o incompleto.");
+      return res.status(400).send("Token inválido o incompleto.");
     }
 
     email = email.toLowerCase().trim();
@@ -264,17 +266,17 @@ router.get('/verify-email-link', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.send("Usuario no encontrado.");
+      return res.status(400).send("Usuario no encontrado.");
     }
 
     const user = result.rows[0];
 
     if (user.verification_code !== code) {
-      return res.send("Código incorrecto.");
+      return res.status(400).send("Código incorrecto.");
     }
 
     if (new Date() > new Date(user.verification_code_expires)) {
-      return res.send("Código expirado.");
+      return res.status(400).send("Código expirado.");
     }
 
     await db.query(
@@ -293,19 +295,16 @@ router.get('/verify-email-link', async (req, res) => {
 
   } catch (error) {
     console.error("Error en verify-email-link:", error);
-    return res.send("Error interno al activar la cuenta.");
+    return res.status(500).send("Error interno al activar la cuenta.");
   }
 });
 
 // ==========================================
-// 🔥 MONTAR RUTAS (ESTO FALTABA)
+// 🔥 MONTAR RUTAS (INCLUYENDO MAGIC LINK GET)
 // ==========================================
 router.post('/register', register);
 router.post('/verify-email', verifyEmail);
 router.post('/login', login);
 router.post('/refresh', refresh);
 
-// ==========================================
-// EXPORT
-// ==========================================
 module.exports = router;
