@@ -66,10 +66,10 @@ app.use('/api/auth', authRoutes);
 app.use(express.static(path.join(rootDir, 'app')));
 
 // ========================================
-// HOME
+// HOME  ✅ MODIFICADO
 // ========================================
 app.get('/', (req, res) => {
-  res.sendFile(path.join(rootDir, 'app', 'dashboard.html'));
+  res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'));
 });
 
 // ========================================
@@ -93,3 +93,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
