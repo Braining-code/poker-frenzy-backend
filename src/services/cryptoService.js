@@ -1,28 +1,23 @@
 const bcrypt = require('bcryptjs');
 
+// Hashea password con salt robusto
 async function hashPassword(password) {
-  try {
-    const salt = await bcrypt.genSalt(10);
-    return await bcrypt.hash(password, salt);
-  } catch (error) {
-    throw new Error(`Error al hashear contraseña: ${error.message}`);
-  }
+  const salt = await bcrypt.genSalt(12);
+  return bcrypt.hash(password, salt);
 }
 
+// Compara password con hash almacenado
 async function comparePassword(password, hash) {
-  try {
-    return await bcrypt.compare(password, hash);
-  } catch (error) {
-    throw new Error(`Error al comparar contraseña: ${error.message}`);
-  }
+  return bcrypt.compare(password, hash);
 }
 
+// Código de verificación de 6 dígitos
 function generarCodigoVerificacion() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 module.exports = {
   hashPassword,
   comparePassword,
-  generarCodigoVerificacion,
+  generarCodigoVerificacion
 };
