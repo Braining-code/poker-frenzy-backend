@@ -179,6 +179,7 @@
 <script>
 const API_URL = "https://web-production-e4083.up.railway.app";
 
+// 🔥 CAPTURA TOKENS DEL HASH
 const hash = window.location.hash.replace("#", "");
 const params = new URLSearchParams(hash);
 
@@ -187,10 +188,11 @@ const r = params.get("refresh");
 
 if (t && r) {
     localStorage.setItem("token", t);
-    localStorage.setItem("refresh", r);
+    localStorage.setItem("refreshToken", r); // 🔥 CORREGIDO: refreshToken en vez de refresh
     window.history.replaceState({}, "", window.location.pathname);
 }
 
+// 🔥 CARGAR USUARIO DESDE API
 async function cargarUsuario() {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -210,20 +212,29 @@ async function cargarUsuario() {
         }
 
         const data = await resp.json();
-        document.getElementById("username").textContent = data.username || "Jugador";
-        localStorage.setItem("user", JSON.stringify(data));
+        document.getElementById("username").textContent = data.user.username || "Jugador";
+        localStorage.setItem("user", JSON.stringify(data.user));
 
     } catch (e) {
+        console.error("Error cargando usuario:", e);
         localStorage.clear();
         window.location.href = "https://pokerfrenzy.club/ingresar";
     }
 }
 
+// 🔥 CERRAR SESIÓN
 document.getElementById("cerrar-sesion").onclick = () => {
     localStorage.clear();
     window.location.href = "https://pokerfrenzy.club/ingresar";
 };
 
+// 🔥 FUNCIONES DE NAVEGACIÓN
+function mostrarPagina(pagina) {
+    document.querySelectorAll('.pagina-contenido').forEach(p => p.classList.add('hidden'));
+    document.getElementById('pagina-' + pagina).classList.remove('hidden');
+}
+
+// 🔥 INICIALIZAR
 cargarUsuario();
 </script>
 
