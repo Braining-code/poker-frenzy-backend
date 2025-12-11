@@ -246,7 +246,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 });
 
 // ==========================================
-// MAGIC LINK — verify-email-link (FIXED FINAL VERSION)
+// MAGIC LINK — verify-email-link (FINAL)
 // ==========================================
 router.get('/verify-email-link', async (req, res) => {
   try {
@@ -290,9 +290,8 @@ router.get('/verify-email-link', async (req, res) => {
     const token = generarToken(user.id, email, user.username);
     const refresh = generarRefreshToken(user.id);
 
-    // 🚀 REDIRIGE AL DASHBOARD REAL, NO A WORDPRESS
     return res.redirect(
-      `https://web-production-e4083.up.railway.app/dashboard-v2.html?token=${encodeURIComponent(token)}&refresh=${encodeURIComponent(refresh)}`
+      `https://frenzy.poker/app/dashboard-v2.html?token=${encodeURIComponent(token)}&refresh=${encodeURIComponent(refresh)}`
     );
 
   } catch (error) {
