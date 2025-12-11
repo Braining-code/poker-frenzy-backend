@@ -1,19 +1,23 @@
+// ==========================================
+// IMPORTS
+// ==========================================
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
 const authRoutes = require('./routes/auth');
 const errorHandler = require('./middleware/errorHandler');
+
 const app = express();
 
-// ========================================
+// ==========================================
 // ROOT DEL PROYECTO
-// ========================================
+// ==========================================
 const rootDir = path.join(__dirname, '..');
 
-// ========================================
-// SECURITY (CSP ajustado y estable)
-// ========================================
+// ==========================================
+// SECURITY — CSP ESTABLE
+// ==========================================
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -27,7 +31,7 @@ app.use(
         ],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "*"],
+        connectSrc: ["'self'", "*"], // 🔥 Permite API externa + Railway frontend
         fontSrc: ["'self'", "data:"],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],
@@ -37,9 +41,9 @@ app.use(
   })
 );
 
-// ========================================
-// NO CACHE (Railway no debe servir nada viejo)
-// ========================================
+// ==========================================
+// NO-CACHE (Obligatorio para que Railway no sirva versiones viejas)
+// ==========================================
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
   res.set('Pragma', 'no-cache');
@@ -47,15 +51,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// ========================================
+// ==========================================
 // BODY PARSING
-// ========================================
+// ==========================================
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ========================================
+// ==========================================
 // CORS
-// ========================================
+// ==========================================
 app.use(
   cors({
     origin: [
@@ -74,14 +78,14 @@ app.use(
   })
 );
 
-// ========================================
+// ==========================================
 // API ROUTES
-// ========================================
+// ==========================================
 app.use('/api/auth', authRoutes);
 
-// ========================================
-// ARCHIVOS ESTÁTICOS — LA APP DEL DASHBOARD
-// ========================================
+// ==========================================
+// ARCHIVOS FRONTEND — APP DEL DASHBOARD
+// ==========================================
 app.use(
   express.static(path.join(rootDir, 'app'), {
     etag: false,
@@ -90,34 +94,40 @@ app.use(
   })
 );
 
-// ========================================
-// HOME — AHORA frenzy.poker → dashboard-v2.html DIRECTO
-// ========================================
+// ==========================================
+// HOME — frenzy.poker → dashboard DIRECTO
+// ==========================================
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'));
 });
 
-// ========================================
-// ⚠️ NO TOCAR rutas con parámetros /api/*
-// (verify-email-link, tokens, etc.)
-// ========================================
+// ==========================================
+// RUTA EXPLÍCITA — evita 404 si se llama directo
+// ==========================================
+app.get('/dashboard-v2.html', (req, res) => {
+  res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'));
+});
+
+// ==========================================
+// ⚠️ IMPORTANTE: NO interceptar /api/*
+// ==========================================
 app.get('/api/*', (req, res, next) => next());
 
-// ========================================
+// ==========================================
 // 404
-// ========================================
+// ==========================================
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
-// ========================================
+// ==========================================
 // ERROR HANDLER
-// ========================================
+// ==========================================
 app.use(errorHandler);
 
-// ========================================
+// ==========================================
 // START SERVER
-// ========================================
+// ==========================================
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🔥 Server running on port ${PORT}`);
