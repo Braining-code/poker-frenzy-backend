@@ -20,7 +20,6 @@ const authenticateToken = require('../middleware/auth');
 
 const router = require('express').Router();
 
-
 // ==========================================
 // REGISTER
 // ==========================================
@@ -97,8 +96,6 @@ async function register(req, res) {
   }
 }
 
-
-
 // ==========================================
 // VERIFY EMAIL (versión vieja — ya no se usa)
 // ==========================================
@@ -150,8 +147,6 @@ async function verifyEmail(req, res) {
   }
 }
 
-
-
 // ==========================================
 // LOGIN
 // ==========================================
@@ -186,7 +181,12 @@ async function login(req, res) {
       success: true,
       message: 'Login exitoso',
       token,
-      refreshToken
+      refreshToken,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: email
+      }
     });
 
   } catch (error) {
@@ -194,8 +194,6 @@ async function login(req, res) {
     res.status(500).json({ error: 'Error en el login' });
   }
 }
-
-
 
 // ==========================================
 // REFRESH
@@ -228,8 +226,6 @@ async function refresh(req, res) {
   }
 }
 
-
-
 // ==========================================
 // GET /me
 // ==========================================
@@ -247,8 +243,6 @@ router.get('/me', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Error obteniendo usuario' });
   }
 });
-
-
 
 // ==========================================
 // MAGIC LINK — verify-email-link (NUEVO)
@@ -293,8 +287,9 @@ router.get('/verify-email-link', async (req, res) => {
     const token = generarToken(user.id, email, user.username);
     const refresh = generarRefreshToken(user.id);
 
+    // 🔥 FIX: Redirige directo a frenzy.poker (sin /ingresar de WordPress)
     return res.redirect(
-      `https://pokerfrenzy.club/ingresar?token=${encodeURIComponent(token)}&refresh=${encodeURIComponent(refresh)}`
+      `https://frenzy.poker?token=${encodeURIComponent(token)}&refresh=${encodeURIComponent(refresh)}`
     );
 
   } catch (error) {
@@ -303,6 +298,13 @@ router.get('/verify-email-link', async (req, res) => {
   }
 });
 
+// ==========================================
+// MONTAR RUTAS
+// ==========================================
+router.post('/register', register);
+router.post('/verify-email', verifyEmail);
+router.post('/login', login);
+router.post('/refresh', refresh);
 
 // ==========================================
 // EXPORT
