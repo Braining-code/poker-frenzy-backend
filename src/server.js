@@ -31,7 +31,7 @@ app.use(
         ],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "*"], // 🔥 Permite API externa + Railway frontend
+        connectSrc: ["'self'", "*"],
         fontSrc: ["'self'", "data:"],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],
@@ -42,7 +42,7 @@ app.use(
 );
 
 // ==========================================
-// NO-CACHE (Obligatorio para que Railway no sirva versiones viejas)
+// NO-CACHE
 // ==========================================
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
@@ -67,6 +67,7 @@ app.use(
       "https://www.pokerfrenzy.club",
       "https://frenzy.poker",
       "https://www.frenzy.poker",
+      "https://app.frenzy.poker",
       process.env.PRODUCTION_LANDING_URL,
       process.env.PRODUCTION_APP_URL,
       "http://localhost:3000",
@@ -84,7 +85,7 @@ app.use(
 app.use('/api/auth', authRoutes);
 
 // ==========================================
-// ARCHIVOS FRONTEND — APP DEL DASHBOARD
+// ARCHIVOS FRONTEND
 // ==========================================
 app.use(
   express.static(path.join(rootDir, 'app'), {
@@ -95,21 +96,21 @@ app.use(
 );
 
 // ==========================================
-// HOME — frenzy.poker → dashboard DIRECTO
+// HOME
 // ==========================================
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'));
 });
 
 // ==========================================
-// RUTA EXPLÍCITA — evita 404 si se llama directo
+// RUTA EXPLÍCITA
 // ==========================================
 app.get('/dashboard-v2.html', (req, res) => {
   res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'));
 });
 
 // ==========================================
-// ⚠️ IMPORTANTE: NO interceptar /api/*
+// NO interceptar /api/*
 // ==========================================
 app.get('/api/*', (req, res, next) => next());
 
