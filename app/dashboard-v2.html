@@ -115,12 +115,12 @@
                                 <p class="text-2xl font-bold text-yellow-400">+$1,250</p>
                                 <p class="text-xs text-gray-400">Profit en liga</p>
                             </div>
+
                         </div>
 
                         <div class="mt-6 space-y-3">
                             <p class="text-sm text-gray-400 font-bold">TOP 5</p>
                             <div class="space-y-2">
-
                                 <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                                     <div class="flex items-center gap-3">
                                         <span class="font-bold text-cyan-400">1</span>
@@ -218,7 +218,7 @@
                                 <tr class="border-b border-white/10 hover:bg-white/5 transition-all">
                                     <td class="py-3 px-4">22 Ene</td>
                                     <td class="py-3 px-4">PokerStars</td>
-                                    <td class="py-3 px-4">$50</td>
+                                    <td class="py-3}px-4">$50</td>
                                     <td class="py-3 px-4">$180</td>
                                     <td class="py-3 px-4"><span class="text-green-400 font-bold">+$130</span></td>
                                     <td class="py-3 px-4"><span class="text-green-400 font-bold">260%</span></td>
@@ -440,38 +440,39 @@
         // ============ CONFIGURACIÓN API ============
         const API_URL = 'https://web-production-e4083.up.railway.app';
 
-        // ============ VALIDACIÓN Y CAPTURA DE TOKEN ============
-        // Primero capturar tokens de URL si vienen de verificación
+        // ============ VALIDACIÓN Y CAPTURA DE TOKEN (FIXED) ============
+        
         const urlParams = new URLSearchParams(window.location.search);
         const urlToken = urlParams.get('token');
         const urlRefresh = urlParams.get('refresh');
 
         if (urlToken && urlRefresh) {
-          // Guardar tokens que vienen de verificación de email
-          localStorage.setItem('token', urlToken);
-          localStorage.setItem('refreshToken', urlRefresh);
-          // Limpiar URL
-          window.history.replaceState({}, '', '/');
-          // Recargar para que dashboard vea el token
-          window.location.reload();
-        } else {
-          // Si no hay tokens en URL, validar localStorage
-          const token = localStorage.getItem('token');
-          if (!token) {
+            // Guardar tokens ANTES de cualquier redirect
+            localStorage.setItem('token', urlToken);
+            localStorage.setItem('refreshToken', urlRefresh);
+
+            // Limpiar la URL sin redirigir al HOME del dominio
+            const cleanUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, '', cleanUrl);
+
+        }
+
+        // Validar token recién AHORA
+        const token = localStorage.getItem('token');
+        if (!token) {
             window.location.href = 'https://pokerfrenzy.club/ingresar';
-          }
         }
 
         // ============ CARGAR DATOS DE USUARIO ============
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         if (user.username) {
-          document.getElementById('username').textContent = user.username;
+            document.getElementById('username').textContent = user.username;
         }
 
         // ============ BOTÓN CERRAR SESIÓN ============
         document.getElementById('cerrar-sesion').addEventListener('click', () => {
-          localStorage.clear();
-          window.location.href = 'https://pokerfrenzy.club/ingresar';
+            localStorage.clear();
+            window.location.href = 'https://pokerfrenzy.club/ingresar';
         });
 
         // Suprimir errores de consola
@@ -552,7 +553,7 @@
                 tbody.innerHTML += fila;
             });
 
-            // Actualizar tabla en inicio también
+            // tabla inicio
             const tablaInicio = document.getElementById('tabla-ultimas-sesiones');
             tablaInicio.innerHTML = '';
             sesiones.slice(0, 2).forEach(s => {
@@ -661,3 +662,4 @@
     </script>
 </body>
 </html>
+
