@@ -12,7 +12,7 @@ const app = express();
 const rootDir = path.join(__dirname, '..');
 
 // ========================================
-// SECURITY (CSP ajustado)
+// SECURITY (CSP ajustado y estable)
 // ========================================
 app.use(
   helmet({
@@ -37,11 +37,11 @@ app.use(
   })
 );
 
-// =======================================================
-// 🔥 NO-CACHE PARA EVITAR VERSIONES ANTIGUAS
-// =======================================================
+// ========================================
+// NO CACHE (Railway no debe servir nada viejo)
+// ========================================
 app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Cache-Control', 'no-store');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
   next();
@@ -79,9 +79,9 @@ app.use(
 // ========================================
 app.use('/api/auth', authRoutes);
 
-// =======================================================
-// ARCHIVOS ESTÁTICOS
-// =======================================================
+// ========================================
+// ARCHIVOS ESTÁTICOS — LA APP DEL DASHBOARD
+// ========================================
 app.use(
   express.static(path.join(rootDir, 'app'), {
     etag: false,
@@ -90,25 +90,22 @@ app.use(
   })
 );
 
-// =======================================================
-// HOME — DASHBOARD (NO WORDPRESS, NO REDIRECTS)
-// =======================================================
+// ========================================
+// HOME — AHORA frenzy.poker → dashboard-v2.html DIRECTO
+// ========================================
 app.get('/', (req, res) => {
-  res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'), {
-    headers: {
-      'Cache-Control': 'no-store'
-    }
-  });
+  res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'));
 });
 
-// =======================================================
-// ⚠️ No interrumpir rutas con parámetros (magic link, tokens...)
-// =======================================================
+// ========================================
+// ⚠️ NO TOCAR rutas con parámetros /api/*
+// (verify-email-link, tokens, etc.)
+// ========================================
 app.get('/api/*', (req, res, next) => next());
 
-// =======================================================
+// ========================================
 // 404
-// =======================================================
+// ========================================
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
