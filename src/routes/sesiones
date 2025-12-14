@@ -1,16 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db'); // usa el pool que ya tenés configurado
+const db = require('../db');
 
 /**
  * GET /api/sesiones/:user_id
- * Devuelve todas las sesiones de un usuario
  */
 router.get('/:user_id', async (req, res) => {
   const { user_id } = req.params;
 
   try {
-    const result = await pool.query(
+    const result = await db.query(
       `SELECT *
        FROM sesiones
        WHERE user_id = $1
@@ -20,14 +19,12 @@ router.get('/:user_id', async (req, res) => {
 
     res.json({ ok: true, sesiones: result.rows });
   } catch (error) {
-    console.error('Error obteniendo sesiones:', error);
     res.status(500).json({ ok: false, error: 'Error obteniendo sesiones' });
   }
 });
 
 /**
  * POST /api/sesiones
- * Crea una nueva sesión
  */
 router.post('/', async (req, res) => {
   const {
@@ -38,16 +35,15 @@ router.post('/', async (req, res) => {
     buy_in,
     cash_out,
     duracion,
-    modalidad,
-    created_at
+    modalidad
   } = req.body;
 
   try {
-    const result = await pool.query(
+    const result = await db.query(
       `INSERT INTO sesiones
-      (user_id, fecha, plataforma, tipo, buy_in, cash_out, duracion, modalidad, created_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-      RETURNING *`,
+       (user_id, fecha, plataforma, tipo, buy_in, cash_out, duracion, modalidad, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, NOW())
+       RETURNING *`,
       [
         user_id,
         fecha,
@@ -56,14 +52,12 @@ router.post('/', async (req, res) => {
         buy_in,
         cash_out ?? null,
         duracion ?? null,
-        modalidad ?? null,
-        created_at ?? new Date()
+        modalidad ?? null
       ]
     );
 
     res.json({ ok: true, sesion: result.rows[0] });
   } catch (error) {
-    console.error('Error creando sesión:', error);
     res.status(500).json({ ok: false, error: 'Error creando sesión' });
   }
 });
