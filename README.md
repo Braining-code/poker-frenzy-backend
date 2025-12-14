@@ -1,406 +1,595 @@
-# POKER FRENZY - PROJECT DOCUMENTATION
-**Última actualización:** 8 Dic 2025 - Chat 2 completo
-**Status:** 75% - Registro + Email funcionando, falta verificación
+# 🎮 POKER FRENZY
+
+Sistema completo de tracking de sesiones de poker con autenticación JWT, dashboard protegido y gamificación.
 
 ---
 
-## 🎯 ESTADO ACTUAL (RESUMEN EJECUTIVO)
+## 📊 ESTADO ACTUAL DEL PROYECTO
 
-### ✅ LO QUE FUNCIONA PERFECTAMENTE
+**Versión:** 1.0 (Fase 1 completada)  
+**Última actualización:** 14 Diciembre 2025
 
-**1. Backend - Registro de Usuarios**
-- ✅ `/api/auth/register` recibe datos sin errores
-- ✅ Crea usuario en PostgreSQL correctamente
-- ✅ Guarda: email, username, password_hash
-- ✅ Genera token de verificación de 6 dígitos
-- ✅ Marca `email_verified = false` (esperado)
-- ✅ Logs limpios en Railway
+### ✅ Completado:
+- Sistema de autenticación JWT + Magic Link
+- Dashboard protegido con validación de tokens
+- Email verification con Brevo
+- DNS configurado (app.frenzy.poker)
+- Backend en Railway + PostgreSQL
 
-**2. Email - Brevo funcionando**
-- ✅ Recibe template HTML
-- ✅ Renderiza hermoso (marca Poker Frenzy visible)
-- ✅ Llega al inbox sin spam
-- ✅ Link de verificación presente
-- ✅ Plan Marketing pagado ($18/mes)
-- ✅ Sender configurado en Brevo
+### ⏳ En Progreso:
+- Fase 2: Sistema de sesiones con API
 
-**3. Frontend - Bloque DIVI**
-- ✅ Paso 1: Registro funciona
-- ✅ Valida passwords (coinciden, 8+ chars)
-- ✅ Paso 2: Muestra "revisá tu email"
-- ✅ Diseño glassmorphism perfecto
-- ✅ Inputs con autofill correcto
-- ✅ Contraste y tipografía OK
-- ✅ Campo username corregido (name="username")
-
-**4. Infraestructura**
-- ✅ Railway: backend online, port 8080
-- ✅ PostgreSQL: tabla users creada con triggers
-- ✅ GitHub: connected para auto-deploy
-- ✅ Brevo: configurado y pagado
+### 🔮 Planificado:
+- Fase 3: Juegos modulares (Poker Rain)
+- Fase 4: Sistema de gamificación completo
+- Fase 5: Seguridad y producción
 
 ---
 
-## ❌ LO QUE FALTA (BLOCKER CRÍTICO)
+## 🏗️ ARQUITECTURA
 
-### El Problema: Email Link Sin Puerta
+### Stack Tecnológico:
+- **Backend:** Node.js + Express
+- **Base de datos:** PostgreSQL (Railway)
+- **Autenticación:** JWT (access + refresh tokens)
+- **Email:** Brevo API
+- **Hosting:** Railway
+- **Frontend:** HTML + Tailwind CSS + React (CDN)
 
-Cuando usuario recibe el email y hace clic en:
-```
-https://pokerfrenzy.club/?token=xxxx
-```
-
-**NO PASA NADA** porque:
-
-1. ❌ No existe endpoint backend que procese el token
-2. ❌ No existe página HTML que reciba el token
-3. ❌ No existe validación del token en BD
-4. ❌ El usuario NUNCA puede marcar `email_verified = true`
-
-**Resultado:** Usuario está registrado pero NO verificado → No puede hacer login
+### Dominios:
+| Dominio | Función | Estado |
+|---------|---------|--------|
+| `pokerfrenzy.club` | Landing page (WordPress) | ✅ Activo |
+| `pokerfrenzy.club/registro-app` | Registro/Login | ✅ Activo |
+| `app.frenzy.poker` | Dashboard protegido | ✅ Activo |
+| `web-production-e4083.up.railway.app` | Backend API | ✅ Activo |
 
 ---
 
-## 🔧 TAREAS PARA COMPLETAR (ORDEN PRIORITARIO)
-
-### PRIORITY 1 - CRITICAL (Hoy - 2-3 horas)
-
-#### Tarea 1.1: Crear endpoint backend `/api/auth/verify-token`
-**Ubicación:** `src/routes/auth.js`
-
-**Debe hacer:**
-```javascript
-POST /api/auth/verify-token
-- Recibe: { email, token }
-- Busca usuario en DB
-- Valida token vs verification_code
-- Valida que no esté expirado (verification_code_expires)
-- Si OK:
-  * Marca email_verified = true
-  * Borra verification_code
-  * Retorna { success: true, message: "Email verificado" }
-- Si error:
-  * Retorna { error: "Token inválido o expirado" }
+## 📂 ESTRUCTURA DEL PROYECTO
 ```
-
-**Código de ejemplo:**
-```javascript
-router.post('/verify-token', async (req, res) => {
-  const { email, token } = req.body;
-  
-  try {
-    const user = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
-    
-    if (!user.rows[0]) {
-      return res.status(400).json({ error: 'Usuario no encontrado' });
-    }
-    
-    const userRow = user.rows[0];
-    
-    // Validar token y expiración
-    if (userRow.verification_code !== token) {
-      return res.status(400).json({ error: 'Token inválido' });
-    }
-    
-    if (new Date() > userRow.verification_code_expires) {
-      return res.status(400).json({ error: 'Token expirado' });
-    }
-    
-    // Marcar como verificado
-    await pool.query(
-      'UPDATE users SET email_verified = true, verification_code = NULL WHERE email = $1',
-      [email]
-    );
-    
-    res.json({ success: true, message: 'Email verificado correctamente' });
-    
-  } catch (err) {
-    res.status(500).json({ error: 'Error verificando email' });
-  }
-});
+poker-frenzy-backend/
+├── src/
+│   ├── config/
+│   │   └── database.js              # Configuración PostgreSQL
+│   ├── middleware/
+│   │   ├── auth.js                  # Middleware JWT
+│   │   └── errorHandler.js          # Error handling
+│   ├── routes/
+│   │   ├── auth.js                  # Endpoints autenticación
+│   │   └── sesiones.js              # Endpoints sesiones (Fase 2)
+│   ├── services/
+│   │   ├── cryptoService.js         # Bcrypt password hashing
+│   │   ├── jwtService.js            # JWT generation/validation
+│   │   └── emailService.js          # Brevo email service
+│   ├── utils/
+│   │   └── constants.js             # Constantes del proyecto
+│   ├── index.js                     # Entry point
+│   └── server.js                    # Express app
+├── app/
+│   ├── dashboard-v2.html            # Dashboard principal
+│   ├── my-stats.html                # Sistema de sesiones (Fase 2)
+│   └── games/                       # Juegos modulares (Fase 3+)
+│       └── poker-rain/
+├── migrations/                       # Migraciones DB (futuro)
+├── .env                             # Variables de entorno
+├── .gitignore
+├── package.json
+├── crear-tabla-sesiones.js          # Script setup DB
+└── README.md
 ```
 
 ---
 
-#### Tarea 1.2: Crear página `/activar` en WordPress
-**Ubicación:** Nueva página en pokerfrenzy.club
+## 🗄️ BASE DE DATOS
 
-**Contenido HTML:**
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Activar Cuenta - Poker Frenzy</title>
-  <style>
-    body { background: #000; color: #fff; font-family: Inter, sans-serif; }
-    .container { max-width: 500px; margin: 100px auto; text-align: center; }
-    h1 { color: #a855f7; font-size: 2rem; }
-    .spinner { animation: spin 1s linear infinite; display: inline-block; }
-    .success { color: #10b981; }
-    .error { color: #f87171; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>🔐 Activando tu cuenta...</h1>
-    <div class="spinner">⚙️</div>
-    <p id="mensaje">Por favor espera...</p>
-  </div>
-  
-  <script>
-    const API_URL = 'https://web-production-e4083.up.railway.app';
-    
-    // Obtener token de URL: ?token=xxxx&email=yyyy
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    const email = params.get('email');
-    
-    if (!token || !email) {
-      document.getElementById('mensaje').textContent = '❌ Token o email faltante';
-      document.getElementById('mensaje').className = 'error';
-    } else {
-      // Llamar endpoint
-      fetch(`${API_URL}/api/auth/verify-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, token })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          document.getElementById('mensaje').textContent = '✅ ¡Cuenta activada! Redirigiendo...';
-          document.getElementById('mensaje').className = 'success';
-          setTimeout(() => {
-            window.location.href = 'https://pokerfrenzy.club/ingresar';
-          }, 2000);
-        } else {
-          document.getElementById('mensaje').textContent = `❌ ${data.error}`;
-          document.getElementById('mensaje').className = 'error';
-        }
-      })
-      .catch(err => {
-        document.getElementById('mensaje').textContent = '❌ Error al activar';
-        document.getElementById('mensaje').className = 'error';
-      });
-    }
-  </script>
-</body>
-</html>
-```
+### Tablas Actuales:
 
----
-
-#### Tarea 1.3: Actualizar link en Brevo
-**Ubicación:** Brevo → Email Templates
-
-**Link ACTUAL en email:**
-```
-https://pokerfrenzy.club/?token=VERIFICATION_CODE
-```
-
-**Cambiar a:**
-```
-https://pokerfrenzy.club/activar?token={{VERIFICATION_CODE}}&email={{EMAIL}}
-```
-
-Brevo interpolará automáticamente `VERIFICATION_CODE` y `EMAIL` desde la BD.
-
----
-
-#### Tarea 1.4: Actualizar codigo backend - Envío de email
-**Ubicación:** `src/routes/auth.js` - función register
-
-**Cambiar:**
-```javascript
-// ANTES (incompleto)
-const verificationLink = `https://pokerfrenzy.club/?token=${verificationCode}`;
-
-// DESPUÉS (correcto)
-const verificationLink = `https://pokerfrenzy.club/activar?token=${verificationCode}&email=${email}`;
-```
-
-O mejor, si usas template variables en Brevo:
-```javascript
-// En Brevo, usar: {{VERIFICATION_CODE}} y {{EMAIL}} automáticamente
-```
-
----
-
-### PRIORITY 2 - HIGH (Después de Priority 1)
-
-#### Tarea 2.1: Crear endpoints de usuario
-**Ubicación:** Crear `src/routes/user.js`
-
-```javascript
-// GET /api/user/me
-- Recibe: Authorization header con JWT
-- Valida token
-- Retorna: { id, email, username, avatar_url, email_verified, created_at }
-
-// POST /api/sesiones
-- Recibe: { fecha, plataforma, tipo, horas, buy_in, cash_out, stakes, notes }
-- Valida JWT
-- Inserta en tabla sesiones
-- Retorna: { success, sesionId }
-
-// GET /api/sesiones
-- Recibe: JWT
-- Retorna: [ { id, fecha, plataforma, profit, ... } ]
-```
-
----
-
-#### Tarea 2.2: Crear tabla `sesiones` en PostgreSQL
+#### `users`
 ```sql
-CREATE TABLE IF NOT EXISTS sesiones (
+CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  user_id INT REFERENCES users(id),
-  fecha TIMESTAMP NOT NULL,
-  plataforma VARCHAR(50),
-  tipo VARCHAR(50),
-  horas DECIMAL(3,1),
-  buy_in DECIMAL(10,2),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  username VARCHAR(100) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  avatar_url VARCHAR(500),
+  email_verified BOOLEAN DEFAULT FALSE,
+  verification_code VARCHAR(6),
+  verification_code_expires TIMESTAMP,
+  fecha_registro TIMESTAMP DEFAULT NOW(),
+  ultimo_login TIMESTAMP,
+  activo BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### `sesiones` (Fase 2)
+```sql
+CREATE TABLE sesiones (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  fecha DATE NOT NULL,
+  plataforma VARCHAR(50) NOT NULL,
+  tipo VARCHAR(20) CHECK (tipo IN ('cash', 'sng', 'tournament')) NOT NULL,
+  buy_in DECIMAL(10,2) NOT NULL,
   cash_out DECIMAL(10,2),
-  stakes VARCHAR(20),
+  prize DECIMAL(10,2),
+  duracion DECIMAL(4,2),
+  modalidad VARCHAR(100),
   notas TEXT,
-  profit DECIMAL(10,2) GENERATED ALWAYS AS (cash_out - buy_in) STORED,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
 ---
 
-#### Tarea 2.3: Desplegar dashboard en Vercel
-- Crear repo `poker-frenzy-app` en GitHub
-- Subir `app-completa.html` (o refactorizar a Next.js)
-- Conectar dominio `app.pokerfrenzy.com`
-- Integrar token JWT desde localStorage
+## 🚀 INSTALACIÓN Y SETUP
 
----
+### 1️⃣ Requisitos Previos:
+- Node.js v18+
+- PostgreSQL (Railway)
+- Cuenta Brevo (emails)
+- GitHub account
 
-### PRIORITY 3 - MEDIUM (Día 3-4)
-
-#### Tarea 3.1: Integrar Poker Rain game
-- Agregar como iframe en dashboard
-- O como componente React embebido
-- Conectar scoring con BD
-
-#### Tarea 3.2: Sistema de Leaderboards
-- Tabla `rankings` en BD
-- Algoritmo de puntos (profit, ROI, winrate)
-- Endpoint `GET /api/rankings`
-
-#### Tarea 3.3: Brevo Marketing Automation
-- Crear campañas de bienvenida
-- Recordatorios de sesión
-- Newsletter semanal
-
----
-
-## 📋 ARCHIVOS GENERADOS/DISPONIBLES
-
-| Archivo | Status | Ubicación |
-|---------|--------|-----------|
-| `BLOQUE-DIVI-AUTH-FIXED.php` | ✅ Listo | outputs/ |
-| `POKER-FRENZY-PROJECT-STATUS.md` | ✅ Listo | outputs/ |
-| `schema.sql` | ✅ Ejecutado | GitHub/database/ |
-| `src/routes/auth.js` | ✅ Funcional | GitHub backend |
-| `/activar` página | ❌ Falta crear | pokerfrenzy.club |
-| `/api/auth/verify-token` | ❌ Falta crear | backend |
-| Endpoints sesiones | ❌ Falta crear | backend |
-
----
-
-## 🔗 URLS Y CREDENCIALES
-
-| Recurso | URL | Status |
-|---------|-----|--------|
-| Landing | https://pokerfrenzy.club | ✅ |
-| Registro | https://pokerfrenzy.club/ingresar | ✅ |
-| Activar | https://pokerfrenzy.club/activar | ❌ Crear |
-| Dashboard | (sin deploy) | ❌ Crear |
-| Backend API | https://web-production-e4083.up.railway.app | ✅ |
-| GitHub | github.com/Braining-code/poker-frenzy-backend | ✅ |
-
----
-
-## 🚀 FLUJO COMPLETO (ACTUAL VS ESPERADO)
-
-### ACTUAL (funciona hasta aquí ✅):
-```
-1. Usuario rellena formulario registro
-2. Frontend valida y envía a /api/auth/register
-3. Backend crea usuario en PostgreSQL
-4. Backend envía email via Brevo
-5. Usuario recibe email con link ✅
-6. Usuario hace click en link... 
-7. ❌ SE CORTA AQUÍ - no hay página /activar
-```
-
-### ESPERADO (después de hacer tareas Priority 1):
-```
-1-6. (igual a actual)
-7. Usuario llega a /activar
-8. Página llama /api/auth/verify-token
-9. Backend marca email_verified = true
-10. Backend retorna success
-11. Página redirige a /ingresar
-12. Usuario puede hacer login ✅
-13. Recibe JWT token
-14. Accede al dashboard ✅
-```
-
----
-
-## 💾 COMANDOS ÚTILES
-
-**Para desplegar cambios en Railway:**
+### 2️⃣ Clonar Repositorio:
 ```bash
-git add .
-git commit -m "Add verify-token endpoint"
-git push origin main
-# Railway auto-redeploya
+git clone https://github.com/tu-usuario/poker-frenzy-backend.git
+cd poker-frenzy-backend
 ```
 
-**Para testear endpoints con curl:**
+### 3️⃣ Instalar Dependencias:
+```bash
+npm install
+```
+
+### 4️⃣ Configurar Variables de Entorno:
+
+Crear archivo `.env` en la raíz:
+```env
+# Database
+DATABASE_URL=postgresql://usuario:password@host:port/database
+
+# JWT
+JWT_SECRET=tu_secret_super_seguro_aqui
+JWT_REFRESH_SECRET=otro_secret_diferente_aqui
+JWT_EXPIRATION=24h
+JWT_REFRESH_EXPIRATION=7d
+
+# Email (Brevo)
+BREVO_API_KEY=tu_api_key_de_brevo
+BREVO_SENDER_EMAIL=noreply@pokerfrenzy.club
+BREVO_SENDER_NAME=Poker Frenzy
+
+# URLs
+PRODUCTION_LANDING_URL=https://pokerfrenzy.club
+PRODUCTION_APP_URL=https://app.frenzy.poker
+BACKEND_URL=https://web-production-e4083.up.railway.app
+
+# Server
+PORT=8080
+NODE_ENV=production
+```
+
+### 5️⃣ Crear Tabla Users (si no existe):
+
+En Railway PostgreSQL Query ejecutar:
+```sql
+-- Ver estructura en sección "Base de Datos" arriba
+```
+
+### 6️⃣ Ejecutar Localmente:
+```bash
+npm start
+```
+
+Servidor corriendo en: `http://localhost:8080`
+
+---
+
+## 🔧 ENDPOINTS API
+
+### Autenticación (`/api/auth`)
+
+#### POST `/api/auth/register`
+Registrar nuevo usuario.
+
+**Request:**
+```json
+{
+  "email": "usuario@ejemplo.com",
+  "username": "jugador123",
+  "password": "contraseña_segura"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Usuario registrado. Verifica tu email.",
+  "userId": 1
+}
+```
+
+---
+
+#### POST `/api/auth/login`
+Login de usuario existente.
+
+**Request:**
+```json
+{
+  "email": "usuario@ejemplo.com",
+  "password": "contraseña_segura"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Login exitoso",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 1,
+    "email": "usuario@ejemplo.com",
+    "username": "jugador123"
+  }
+}
+```
+
+---
+
+#### GET `/api/auth/verify-email-link?code=123456&email=usuario@ejemplo.com`
+Verificar email via Magic Link.
+
+**Response:** Redirect a `app.frenzy.poker#token=XXX&refresh=YYY`
+
+---
+
+#### GET `/api/auth/me`
+Obtener datos del usuario autenticado.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "user": {
+    "id": 1,
+    "email": "usuario@ejemplo.com",
+    "username": "jugador123",
+    "email_verified": true
+  }
+}
+```
+
+---
+
+#### POST `/api/auth/refresh`
+Renovar access token.
+
+**Request:**
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response:**
+```json
+{
+  "token": "nuevo_token_aqui"
+}
+```
+
+---
+
+### Sesiones (`/api/sesiones`) - FASE 2
+
+#### GET `/api/sesiones/user/:userId`
+Obtener todas las sesiones del usuario.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "sesiones": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "fecha": "2025-12-14",
+      "plataforma": "PokerStars",
+      "tipo": "cash",
+      "buy_in": 100.00,
+      "cash_out": 250.00,
+      "duracion": 2.5,
+      "modalidad": "NLHE 1/2",
+      "created_at": "2025-12-14T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+#### POST `/api/sesiones`
+Crear nueva sesión.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "fecha": "2025-12-14",
+  "plataforma": "PokerStars",
+  "tipo": "cash",
+  "buy_in": 100.00,
+  "cash_out": 250.00,
+  "duracion": 2.5,
+  "modalidad": "NLHE 1/2"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Sesión creada exitosamente",
+  "sesion": { ... }
+}
+```
+
+---
+
+#### PUT `/api/sesiones/:id`
+Actualizar sesión existente.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Request:**
+```json
+{
+  "cash_out": 300.00,
+  "duracion": 3.0
+}
+```
+
+---
+
+#### DELETE `/api/sesiones/:id`
+Eliminar sesión.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "message": "Sesión eliminada exitosamente"
+}
+```
+
+---
+
+#### GET `/api/sesiones/stats/:userId`
+Obtener estadísticas del usuario.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "stats": {
+    "profit": 1250.50,
+    "dias": 12,
+    "winrate": 65,
+    "sessions": 24
+  },
+  "profitPorSala": [
+    { "sala": "PokerStars", "profit": 800.00, "sesiones": 15 },
+    { "sala": "GGPoker", "profit": 450.50, "sesiones": 9 }
+  ],
+  "evolucion": [
+    { "fecha": "2025-12-01", "profit_acumulado": 100 },
+    { "fecha": "2025-12-02", "profit_acumulado": 250 }
+  ]
+}
+```
+
+---
+
+## 🔐 SEGURIDAD
+
+### Implementado:
+- ✅ Bcrypt para hashing de passwords (cost 10)
+- ✅ JWT con tokens de acceso (24h) y refresh (7d)
+- ✅ HTTPS obligatorio en producción
+- ✅ CORS restrictivo
+- ✅ Helmet.js (CSP headers)
+- ✅ Validación de datos en endpoints
+- ✅ SQL injection protection (pg parameterized queries)
+
+### Pendiente (Fase 5):
+- Rate limiting
+- Cloudflare integration
+- Security headers adicionales
+- Monitoring y alertas
+- Backup automático PostgreSQL
+
+---
+
+## 🧪 TESTING
+
+### Flujo de Registro Completo:
+1. Ir a `https://pokerfrenzy.club/registro-app`
+2. Completar formulario
+3. Recibir email de Brevo
+4. Click en Magic Link
+5. Redirect automático a `app.frenzy.poker`
+6. Dashboard carga con username
+
+### Flujo de Login:
+1. Ir a `https://pokerfrenzy.club/registro-app`
+2. Click "YA TENGO CUENTA"
+3. Ingresar email + password
+4. Redirect a dashboard
+
+### Test API Local:
 ```bash
 # Registro
-curl -X POST https://web-production-e4083.up.railway.app/api/auth/register \
+curl -X POST http://localhost:8080/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@test.com","username":"testuser","password":"password123"}'
+  -d '{"email":"test@test.com","username":"testuser","password":"Test123!"}'
 
-# Verificar token
-curl -X POST https://web-production-e4083.up.railway.app/api/auth/verify-token \
+# Login
+curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@test.com","token":"123456"}'
+  -d '{"email":"test@test.com","password":"Test123!"}'
+
+# Get User (reemplazar TOKEN)
+curl -X GET http://localhost:8080/api/auth/me \
+  -H "Authorization: Bearer TOKEN"
 ```
 
 ---
 
-## 📊 CHECKLIST PARA PRÓXIMO CHAT
+## 📝 ROADMAP
 
-- [ ] Crear endpoint `/api/auth/verify-token` en backend
-- [ ] Crear página `/activar` en WordPress
-- [ ] Actualizar link en template Brevo
-- [ ] Testear flujo completo: registro → email → click → verificación
-- [ ] Crear tabla `sesiones` en PostgreSQL
-- [ ] Crear endpoints `/api/sesiones` en backend
-- [ ] Desplegar dashboard en Vercel
-- [ ] Integrar Poker Rain game
+### ✅ Fase 1 - Infraestructura Base (COMPLETADA)
+- [x] Sistema de autenticación completo
+- [x] Dashboard protegido
+- [x] DNS y dominios configurados
+- [x] Email verification
+- [x] Deploy en Railway
 
----
-
-## 🎯 META PARA PRÓXIMA SEMANA
-
-- ✅ **Hoy:** Completar verificación de email (Priority 1)
-- ✅ **Mañana:** Endpoints de sesiones + dashboard (Priority 2)
-- ✅ **Pasado:** Brevo marketing + Poker Rain (Priority 3)
-- ✅ **Fin de semana:** Testing y optimizaciones
+**Duración:** 1 semana  
+**Completado:** 11 Diciembre 2025
 
 ---
 
-**Documento actualizado:** 8 Dic 2025 - 23:00 (Buenos Aires)
-**Próxima revisión:** Después de completar Priority 1
+### ⏳ Fase 2 - Sistema de Sesiones (EN PROGRESO)
+- [ ] Tabla `sesiones` en PostgreSQL
+- [ ] API endpoints CRUD
+- [ ] Componente My Stats (React)
+- [ ] Migración localStorage → API
+- [ ] Stats en tiempo real
+- [ ] Gráficos de evolución
+
+**Duración estimada:** 1-2 días  
+**Inicio:** 14 Diciembre 2025
+
+---
+
+### 📝 Fase 3 - Juegos Modulares
+- [ ] Build standalone Poker Rain
+- [ ] Integración en dashboard
+- [ ] Tabla `game_scores`
+- [ ] Leaderboard por juego
+- [ ] Sistema modular para agregar juegos
+
+**Duración estimada:** 1-2 días
+
+---
+
+### 🏆 Fase 4 - Gamificación Completa
+- [ ] Tabla `gamification`
+- [ ] Tabla `achievements`
+- [ ] Sistema de puntos unificado
+- [ ] Niveles y progresión
+- [ ] Badges automáticos
+- [ ] Ranking global
+- [ ] Sistema de ligas
+- [ ] Notificaciones de logros
+
+**Duración estimada:** 1-2 semanas
+
+---
+
+### 🛡️ Fase 5 - Seguridad y Producción
+- [ ] Cloudflare setup
+- [ ] Rate limiting
+- [ ] Security headers completos
+- [ ] Monitoring (Sentry/LogRocket)
+- [ ] Backups automáticos
+- [ ] Sistema de migraciones profesional
+- [ ] Tests automatizados
+- [ ] CI/CD pipeline
+
+**Duración estimada:** 1 semana
+
+---
+
+## 🤝 CONTRIBUIR
+
+### Setup para Desarrollo:
+
+1. Fork del repositorio
+2. Crear branch: `git checkout -b feature/nueva-feature`
+3. Commit cambios: `git commit -m 'Add nueva feature'`
+4. Push: `git push origin feature/nueva-feature`
+5. Crear Pull Request
+
+### Estándares de Código:
+- ESLint configurado
+- Prettier para formato
+- Commits descriptivos
+- Code review obligatorio
+
+---
+
+## 📞 SOPORTE Y CONTACTO
+
+- **Issues:** GitHub Issues
+- **Email:** soporte@pokerfrenzy.club
+- **Documentación:** Este README
+
+---
+
+## 📄 LICENCIA
+
+Proprietary - Todos los derechos reservados © 2025 Poker Frenzy
+
+---
+
+## 🙏 AGRADECIMIENTOS
+
+- Railway por hosting
+- Brevo por email service
+- Anthropic Claude por asistencia en desarrollo
+
+---
+
+## 📚 RECURSOS ADICIONALES
+
+### Documentación Técnica:
+- [JWT Best Practices](https://auth0.com/blog/a-look-at-the-latest-draft-for-jwt-bcp/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [Express.js Guide](https://expressjs.com/en/guide/routing.html)
+- [Railway Docs](https://docs.railway.app/)
+
+### Prompt Sistema Modular:
+Ver documento `SISTEMA_MODULAR.md` para arquitectura de juegos/features.
+
+---
+
+**Última actualización:** 14 Diciembre 2025  
+**Versión README:** 1.0
