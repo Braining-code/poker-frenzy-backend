@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const pool = require('../db');
+const authenticateToken = require('../middleware/auth');
 
-/**
- * GET /api/sesiones/:user_id
- */
+router.use(authenticateToken);
+
 router.get('/:user_id', async (req, res) => {
   const { user_id } = req.params;
 
   try {
-    const result = await db.query(
+    const result = await pool.query(
       `SELECT *
        FROM sesiones
        WHERE user_id = $1
@@ -18,14 +18,11 @@ router.get('/:user_id', async (req, res) => {
     );
 
     res.json({ ok: true, sesiones: result.rows });
-  } catch (error) {
+  } catch {
     res.status(500).json({ ok: false, error: 'Error obteniendo sesiones' });
   }
 });
 
-/**
- * POST /api/sesiones
- */
 router.post('/', async (req, res) => {
   const {
     user_id,
@@ -39,7 +36,7 @@ router.post('/', async (req, res) => {
   } = req.body;
 
   try {
-    const result = await db.query(
+    const result = await pool.query(
       `INSERT INTO sesiones
        (user_id, fecha, plataforma, tipo, buy_in, cash_out, duracion, modalidad, created_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8, NOW())
@@ -57,7 +54,7 @@ router.post('/', async (req, res) => {
     );
 
     res.json({ ok: true, sesion: result.rows[0] });
-  } catch (error) {
+  } catch {
     res.status(500).json({ ok: false, error: 'Error creando sesión' });
   }
 });
