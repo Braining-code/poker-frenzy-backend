@@ -1,177 +1,84 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poker Frenzy - Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poker Frenzy - Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
 
 <body class="bg-black text-white">
 
 <nav class="fixed w-full top-0 z-50 bg-black/95 border-b border-purple-500/30 backdrop-blur-xl">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        <div class="text-2xl font-bold tracking-widest text-cyan-500">POKER FRENZY</div>
-        <div class="flex items-center gap-6">
-            <div class="text-sm">
-                <p class="text-gray-400">Hola,</p>
-                <p class="font-bold text-cyan-300" id="username">Usuario</p>
-            </div>
-            <button id="cerrar-sesion" class="px-6 py-2 border-2 border-purple-500 text-purple-400 font-bold text-sm rounded-lg hover:bg-purple-500/10 transition-all">
-                CERRAR SESIÓN
-            </button>
-        </div>
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <div class="text-2xl font-bold tracking-widest text-cyan-500">POKER FRENZY</div>
+    <div class="flex items-center gap-6">
+      <div class="text-sm">
+        <p class="text-gray-400">Hola,</p>
+        <p class="font-bold text-cyan-300" id="username">Usuario</p>
+      </div>
+      <button id="cerrar-sesion" class="px-6 py-2 border-2 border-purple-500 text-purple-400 font-bold text-sm rounded-lg hover:bg-purple-500/10 transition-all">
+        CERRAR SESIÓN
+      </button>
     </div>
+  </div>
 </nav>
 
 <div class="pt-20 flex">
 <aside class="w-64 bg-gradient-to-b from-purple-950/40 to-black border-r border-white/10 min-h-screen p-6 fixed left-0">
-    <div class="space-y-8 mt-8">
-        <div class="space-y-4">
-            <button onclick="mostrarPagina('inicio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 font-bold text-sm transition-all text-left">
-                <span>📊</span> Inicio
-            </button>
-            <button onclick="mostrarPagina('sesiones')" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 transition-all text-sm text-left">
-                <span>🎰</span> Mis Sesiones
-            </button>
-            <button onclick="mostrarPagina('academia')" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 transition-all text-sm text-left">
-                <span>📚</span> Academia
-            </button>
-            <button onclick="mostrarPagina('jugar')" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 transition-all text-sm text-left">
-                <span>🎮</span> Jugar Poker Crazy
-            </button>
-        </div>
-
-        <div class="pt-8 border-t border-white/10">
-            <p class="text-xs text-gray-500 font-bold mb-4">TUS STATS</p>
-            <div class="space-y-3">
-                <div class="bg-white/5 p-3 rounded-lg">
-                    <p class="text-xs text-gray-400">Profit Total</p>
-                    <p class="text-lg font-bold text-green-400">+$1,250</p>
-                </div>
-                <div class="bg-white/5 p-3 rounded-lg">
-                    <p class="text-xs text-gray-400">Winrate</p>
-                    <p class="text-lg font-bold text-cyan-400">62%</p>
-                </div>
-                <div class="bg-white/5 p-3 rounded-lg">
-                    <p class="text-xs text-gray-400">Sesiones</p>
-                    <p class="text-lg font-bold text-purple-400">24</p>
-                </div>
-            </div>
-        </div>
+  <div class="space-y-8 mt-8">
+    <div class="space-y-4">
+      <button data-pagina="inicio" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 font-bold text-sm text-left">
+        📊 Inicio
+      </button>
+      <button data-pagina="sesiones" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left">
+        🎰 Mis Sesiones
+      </button>
+      <button data-pagina="academia" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left">
+        📚 Academia
+      </button>
+      <button data-pagina="jugar" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left">
+        🎮 Jugar Poker Crazy
+      </button>
     </div>
+  </div>
 </aside>
 
 <main class="ml-64 flex-1 p-8">
 
 <div id="pagina-inicio" class="pagina-contenido">
-    <div class="mb-8">
-        <h1 class="text-4xl font-black text-white mb-2">Inicio</h1>
-        <p class="text-gray-400">Enero 2024</p>
+  <div class="mb-8">
+    <h1 class="text-4xl font-black mb-2">Inicio</h1>
+    <p class="text-gray-400">Enero 2024</p>
+  </div>
+
+  <div class="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-bold">ÚLTIMAS SESIONES</h2>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-xl p-6">
-            <p class="text-xs text-cyan-300 font-bold mb-2">PROFIT ESTE MES</p>
-            <p class="text-3xl font-black text-cyan-400">+$850</p>
-            <p class="text-xs text-gray-400 mt-2">↑ 12% vs mes anterior</p>
-        </div>
-        <div class="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-xl p-6">
-            <p class="text-xs text-green-300 font-bold mb-2">WINRATE</p>
-            <p class="text-3xl font-black text-green-400">64%</p>
-            <p class="text-xs text-gray-400 mt-2">12 sesiones ganadas</p>
-        </div>
-        <div class="bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/30 rounded-xl p-6">
-            <p class="text-xs text-purple-300 font-bold mb-2">PROMEDIO/SESIÓN</p>
-            <p class="text-3xl font-black text-purple-400">+$70</p>
-            <p class="text-xs text-gray-400 mt-2">En 19 sesiones</p>
-        </div>
-        <div class="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/30 rounded-xl p-6">
-            <p class="text-xs text-yellow-300 font-bold mb-2">ROI</p>
-            <p class="text-3xl font-black text-yellow-400">156%</p>
-            <p class="text-xs text-gray-400 mt-2">Inversión total: $545</p>
-        </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-white/10">
+            <th class="text-left py-3 px-4 text-gray-400 font-bold">FECHA</th>
+            <th class="text-left py-3 px-4 text-gray-400 font-bold">PLATAFORMA</th>
+            <th class="text-left py-3 px-4 text-gray-400 font-bold">BUY-IN</th>
+            <th class="text-left py-3 px-4 text-gray-400 font-bold">CASH OUT</th>
+            <th class="text-left py-3 px-4 text-gray-400 font-bold">RESULTADO</th>
+            <th class="text-left py-3 px-4 text-gray-400 font-bold">ROI</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-ultimas-sesiones"></tbody>
+      </table>
     </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="lg:col-span-2 bg-white/5 border border-white/10 rounded-xl p-6">
-            <h2 class="text-xl font-bold mb-6">MI RANKING EN LA LIGA</h2>
-
-            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-500/30 to-yellow-500/10 border border-yellow-500/50 rounded-lg">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-bold text-lg">3</div>
-                    <div>
-                        <p class="font-bold">Usuario</p>
-                        <p class="text-sm text-gray-400">Tu posición</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <p class="text-2xl font-bold text-yellow-400">+$1,250</p>
-                    <p class="text-xs text-gray-400">Profit en liga</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white/5 border border-white/10 rounded-xl p-6">
-            <h2 class="text-xl font-bold mb-6">PRÓXIMOS EVENTOS</h2>
-            <div class="space-y-4">
-
-                <div class="bg-gradient-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-lg p-4">
-                    <p class="text-xs text-cyan-300 font-bold">MARTES 23 - 15:00</p>
-                    <p class="font-bold text-sm mt-2">Torneo Standard</p>
-                    <p class="text-xs text-gray-400 mt-1">$50 buy-in • 50 premios</p>
-                    <button class="w-full mt-3 py-2 bg-cyan-500 text-black font-bold text-sm rounded-lg hover:bg-cyan-400 transition-all">Inscribirse</button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-bold">ÚLTIMAS SESIONES</h2>
-            <button onclick="mostrarPagina('sesiones')" class="px-4 py-2 bg-cyan-500/20 border border-cyan-500/50 text-cyan-400 font-bold text-sm rounded-lg hover:bg-cyan-500/30 transition-all">
-                + Registrar sesión
-            </button>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-white/10">
-                        <th class="text-left py-3 px-4 text-gray-400 font-bold">FECHA</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-bold">PLATAFORMA</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-bold">BUY-IN</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-bold">CASH OUT</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-bold">RESULTADO</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-bold">ROI</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-ultimas-sesiones"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 rounded-xl p-6 mb-8">
-        <h2 class="text-xl font-bold mb-4">📊 RECOMENDACIONES</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-black/40 p-4 rounded-lg">
-                <p class="text-sm text-green-400 font-bold">✓ Enfócate en PokerStars</p>
-                <p class="text-xs text-gray-400 mt-1">Tu mejor winrate (75%) está aquí</p>
-            </div>
-        </div>
-    </div>
-
+  </div>
 </div>
 
 <div id="pagina-sesiones" class="pagina-contenido hidden"></div>
-
 <div id="pagina-academia" class="pagina-contenido hidden"></div>
-
 <div id="pagina-jugar" class="pagina-contenido hidden"></div>
-
-<div id="pagina-perfil" class="pagina-contenido hidden"></div>
 
 </main>
 </div>
@@ -179,62 +86,81 @@
 <script>
 const API_URL = "https://web-production-e4083.up.railway.app";
 
-// 🔥 CAPTURA TOKENS DEL HASH
 const hash = window.location.hash.replace("#", "");
 const params = new URLSearchParams(hash);
-
 const t = params.get("token");
 const r = params.get("refresh");
 
 if (t && r) {
-    localStorage.setItem("token", t);
-    localStorage.setItem("refreshToken", r); // 🔥 CORREGIDO: refreshToken en vez de refresh
-    window.history.replaceState({}, "", window.location.pathname);
+  localStorage.setItem("token", t);
+  localStorage.setItem("refreshToken", r);
+  window.history.replaceState({}, "", window.location.pathname);
 }
 
-// 🔥 CARGAR USUARIO DESDE API
 async function cargarUsuario() {
-    const token = localStorage.getItem("token");
-    if (!token) {
-        window.location.href = "https://pokerfrenzy.club/ingresar";
-        return;
-    }
+  const token = localStorage.getItem("token");
+  if (!token) {
+    window.location.href = "https://pokerfrenzy.club/ingresar";
+    return;
+  }
 
-    try {
-        const resp = await fetch(`${API_URL}/api/auth/me`, {
-            headers: { Authorization: "Bearer " + token }
-        });
+  const resp = await fetch(`${API_URL}/api/auth/me`, {
+    headers: { Authorization: "Bearer " + token }
+  });
 
-        if (!resp.ok) {
-            localStorage.clear();
-            window.location.href = "https://pokerfrenzy.club/ingresar";
-            return;
-        }
-
-        const data = await resp.json();
-        document.getElementById("username").textContent = data.user.username || "Jugador";
-        localStorage.setItem("user", JSON.stringify(data.user));
-
-    } catch (e) {
-        console.error("Error cargando usuario:", e);
-        localStorage.clear();
-        window.location.href = "https://pokerfrenzy.club/ingresar";
-    }
-}
-
-// 🔥 CERRAR SESIÓN
-document.getElementById("cerrar-sesion").onclick = () => {
+  if (!resp.ok) {
     localStorage.clear();
     window.location.href = "https://pokerfrenzy.club/ingresar";
-};
+    return;
+  }
 
-// 🔥 FUNCIONES DE NAVEGACIÓN
-function mostrarPagina(pagina) {
-    document.querySelectorAll('.pagina-contenido').forEach(p => p.classList.add('hidden'));
-    document.getElementById('pagina-' + pagina).classList.remove('hidden');
+  const data = await resp.json();
+  document.getElementById("username").textContent = data.user.username;
+  cargarSesiones();
 }
 
-// 🔥 INICIALIZAR
+async function cargarSesiones() {
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const resp = await fetch(`${API_URL}/api/sesiones/${user.id}`, {
+    headers: { Authorization: "Bearer " + token }
+  });
+
+  const data = await resp.json();
+  const tbody = document.getElementById("tabla-ultimas-sesiones");
+  tbody.innerHTML = "";
+
+  data.sesiones.forEach(s => {
+    const resultado = s.cash_out - s.buy_in;
+    const roi = ((resultado / s.buy_in) * 100).toFixed(0);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="px-4 py-2">${s.fecha}</td>
+      <td class="px-4 py-2">${s.plataforma}</td>
+      <td class="px-4 py-2">$${s.buy_in}</td>
+      <td class="px-4 py-2">$${s.cash_out}</td>
+      <td class="px-4 py-2 ${resultado >= 0 ? "text-green-400" : "text-red-400"}">
+        ${resultado >= 0 ? "+" : ""}${resultado}
+      </td>
+      <td class="px-4 py-2">${roi}%</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById("cerrar-sesion").addEventListener("click", () => {
+  localStorage.clear();
+  window.location.href = "https://pokerfrenzy.club/ingresar";
+});
+
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".pagina-contenido").forEach(p => p.classList.add("hidden"));
+    document.getElementById("pagina-" + btn.dataset.pagina).classList.remove("hidden");
+  });
+});
+
 cargarUsuario();
 </script>
 
