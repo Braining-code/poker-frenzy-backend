@@ -81,7 +81,9 @@ app.get('/dashboard-v2.html', (req, res) => {
   res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'));
 });
 
-app.get('/api/*', (req, res, next) => next());
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'Ruta no encontrada' });
+});
 
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
