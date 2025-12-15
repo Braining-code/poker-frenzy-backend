@@ -1,13 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const { pool } = require('../config/database'); // 🔥 CORREGIDO
 const authenticateToken = require('../middleware/auth');
 
+// Aplicar middleware de autenticación a todas las rutas
 router.use(authenticateToken);
 
+// ==========================================
+// GET /api/sesiones/:user_id
+// Obtener todas las sesiones de un usuario
+// ==========================================
 router.get('/:user_id', async (req, res) => {
   const { user_id } = req.params;
-
+  
   try {
     const result = await pool.query(
       `SELECT *
@@ -16,13 +21,18 @@ router.get('/:user_id', async (req, res) => {
        ORDER BY fecha DESC, id DESC`,
       [user_id]
     );
-
+    
     res.json({ ok: true, sesiones: result.rows });
-  } catch {
+  } catch (error) {
+    console.error('Error obteniendo sesiones:', error);
     res.status(500).json({ ok: false, error: 'Error obteniendo sesiones' });
   }
 });
 
+// ==========================================
+// POST /api/sesiones
+// Crear nueva sesión
+// ==========================================
 router.post('/', async (req, res) => {
   const {
     user_id,
@@ -34,12 +44,12 @@ router.post('/', async (req, res) => {
     duracion,
     modalidad
   } = req.body;
-
+  
   try {
     const result = await pool.query(
       `INSERT INTO sesiones
        (user_id, fecha, plataforma, tipo, buy_in, cash_out, duracion, modalidad, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, NOW())
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
        RETURNING *`,
       [
         user_id,
@@ -52,10 +62,69 @@ router.post('/', async (req, res) => {
         modalidad ?? null
       ]
     );
-
+    
     res.json({ ok: true, sesion: result.rows[0] });
-  } catch {
+  } catch (error) {
+    console.error('Error creando sesión:', error);
     res.status(500).json({ ok: false, error: 'Error creando sesión' });
+  }
+});
+
+// ==========================================
+// PUT /api/sesiones/:id
+// Actualizar sesión existente
+// ==========================================
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { fecha, plataforma, tipo, buy_in, cash_out, duracion, modalidad } = req.body;
+  
+  try {
+    const result = await pool.query(
+      `UPDATE sesiones 
+       SET fecha = COALESCE($1, fecha),
+           plataforma = COALESCE($2, plataforma),
+           tipo = COALESCE($3, tipo),
+           buy_in = COALESCE($4, buy_in),
+           cash_out = COALESCE($5, cash_out),
+           duracion = COALESCE($6, duracion),
+           modalidad = COALESCE($7, modalidad)
+       WHERE id = $8
+       RETURNING *`,
+      [fecha, plataforma, tipo, buy_in, cash_out, duracion, modalidad, id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ ok: false, error: 'Sesión no encontrada' });
+    }
+    
+    res.json({ ok: true, sesion: result.rows[0] });
+  } catch (error) {
+    console.error('Error actualizando sesión:', error);
+    res.status(500).json({ ok: false, error: 'Error actualizando sesión' });
+  }
+});
+
+// ==========================================
+// DELETE /api/sesiones/:id
+// Eliminar sesión
+// ==========================================
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const result = await pool.query(
+      `DELETE FROM sesiones WHERE id = $1 RETURNING id`,
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ ok: false, error: 'Sesión no encontrada' });
+    }
+    
+    res.json({ ok: true, message: 'Sesión eliminada' });
+  } catch (error) {
+    console.error('Error eliminando sesión:', error);
+    res.status(500).json({ ok: false, error: 'Error eliminando sesión' });
   }
 });
 
