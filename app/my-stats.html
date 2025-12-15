@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Stats - Poker Frenzy</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0;">
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+    const API_URL = "https://web-production-e4083.up.railway.app";
+
+    // ==========================================
+    // ICONOS INLINE (reemplazo de lucide-react)
+    // ==========================================
+    const Plus = ({ size = 16, ...props }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    );
+
+    const ArrowLeft = ({ size = 16, ...props }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+    );
+
+    const TrendingUp = ({ size = 16, ...props }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+        <polyline points="17 6 23 6 23 12"></polyline>
+      </svg>
+    );
+
+    const ChevronDown = ({ size = 20, style, ...props }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={style} {...props}>
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    );
+
+    // ==========================================
+    // COMPONENTE PRINCIPAL
+    // ==========================================
+    function PokerTracker() {
+      const [showForm, setShowForm] = useState(false);
+      const [sessions, setSessions] = useState([]);
+      const [expandedSessions, setExpandedSessions] = useState(new Set());
+      const [editingSession, setEditingSession] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [userId, setUserId] = useState(null);
+
+      const [form, setForm] = useState({
+        type: 'cash',
+        buyIn: '',
+        cashOut: '',
+        prize: '',
+        sala: 'PokerStars',
+        modalidad: '',
+        date: new Date().toISOString().split('T')[0],
+        duration: '',
+      });
+
+      const colors = { 
+        bg: '#0a0e27', 
+        cardBg: '#1a1f3a', 
+        border: '#ff1493', 
+        primary: '#ff1493',
+        secondary: '#00d4ff', 
+        accent: '#ffd60a',
+        success: '#2ecc71',
+        danger: '#ff4757',
+        text: '#fff', 
+        muted: '#6c757d',
+      };
+
+      const SALAS = ['PokerStars', 'GGPoker', 'ACR', 'WPT', 'Otra'];
+
+      const statInfo = {
+        profit: { label: 'Profit', calc: 'Cash Out - Buy In (o Prize - Buy In)' },
+        dias: { label: 'Días Jugados', calc: 'Días únicos en los que jugaste' },
+        winrate: { label: 'Winrate', calc: '(Sesiones Ganadas / Total) × 100' },
+        sessions: { label: 'Sesiones', calc: 'Total de sesiones registradas' }
+      };
+
+      const [hoveredStat, setHoveredStat] = useState(null);
+
+      // ==========================================
+      // VALIDAR AUTH Y CARGAR SESIONES
+      // ==========================================
+      useEffect(() => {
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          window.location.href = 'https://pokerfrenzy.club/ingresar';
+          return;
+        }
+
+        async function cargarDatos() {
+          try {
+            // Obtener info del usuario
+            const userResp = await fetch(`${API_URL}/api/auth/me`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!userResp.ok) {
+              localStorage.clear();
+              window.location.href = 'https://pokerfrenzy.club/ingresar';
+              return;
+            }
+
+            const userData = await userResp.json();
+            setUserId(userData.user.id);
+
+            // Cargar sesiones
+            const sesionesResp = await fetch(`${API_URL}/api/sesiones/${userData.user.id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (sesionesResp.ok) {
+              const sesionesData = await sesionesResp.json();
+              
+              // Mapear datos de API a formato del componente
+              const mappedSessions = sesionesData.sesiones.map(s => ({
+                id: s.id,
+                type: s.tipo,
+                buyIn: parseFloat(s.buy_in),
+                cashOut: s.cash_out ? parseFloat(s.cash_out) : undefined,
+                prize: s.prize ? parseFloat(s.prize) : undefined,
+                sala: s.plataforma,
+                modalidad: s.modalidad || 'N/A',
+                date: s.fecha,
+                duration: s.duracion ? parseFloat(s.duracion) : undefined,
+              }));
+
+              setSessions(mappedSessions);
+            }
+
+            setLoading(false);
+          } catch (error) {
+            console.error('Error cargando datos:', error);
+            setLoading(false);
+          }
+        }
+
+        cargarDatos();
+      }, []);
+
+      // ==========================================
+      // CALCULAR STATS
+      // ==========================================
+      const stats = useMemo(() => {
+        const profit = sessions.reduce((acc, s) => {
+          if (s.type === 'cash') return acc + (s.cashOut - s.buyIn);
+          return acc + (s.prize - s.buyIn);
+        }, 0);
+
+        const uniqueDays = new Set(sessions.map(s => s.date)).size;
+        const wins = sessions.filter(s => {
+          if (s.type === 'cash') return s.cashOut > s.buyIn;
+          return s.prize > s.buyIn;
+        }).length;
+
+        return {
+          profit,
+          dias: uniqueDays,
+          winrate: sessions.length > 0 ? ((wins / sessions.length) * 100).toFixed(0) : 0,
+          sessions: sessions.length,
+        };
+      }, [sessions]);
+
+      const getProfit = (s) => s.type === 'cash' ? s.cashOut - s.buyIn : s.prize - s.buyIn;
+
+      // ==========================================
+      // AGREGAR/EDITAR SESIÓN
+      // ==========================================
+      const addSession = async () => {
+        if (!form.buyIn || !form.date || !form.sala) {
+          alert('Completa campos obligatorios');
+          return;
+        }
+
+        const token = localStorage.getItem('token');
+        
+        const sessionData = {
+          user_id: userId,
+          fecha: form.date,
+          plataforma: form.sala,
+          tipo: form.type,
+          buy_in: parseFloat(form.buyIn),
+          cash_out: form.type === 'cash' ? parseFloat(form.cashOut || 0) : null,
+          prize: form.type !== 'cash' ? parseFloat(form.prize || 0) : null,
+          duracion: form.type === 'cash' ? parseFloat(form.duration || 0) : null,
+          modalidad: form.modalidad || null,
+        };
+
+        try {
+          if (editingSession) {
+            // EDITAR
+            const resp = await fetch(`${API_URL}/api/sesiones/${editingSession.id}`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(sessionData)
+            });
+
+            if (resp.ok) {
+              const data = await resp.json();
+              const updatedSession = {
+                id: data.sesion.id,
+                type: data.sesion.tipo,
+                buyIn: parseFloat(data.sesion.buy_in),
+                cashOut: data.sesion.cash_out ? parseFloat(data.sesion.cash_out) : undefined,
+                prize: data.sesion.prize ? parseFloat(data.sesion.prize) : undefined,
+                sala: data.sesion.plataforma,
+                modalidad: data.sesion.modalidad || 'N/A',
+                date: data.sesion.fecha,
+                duration: data.sesion.duracion ? parseFloat(data.sesion.duracion) : undefined,
+              };
+              
+              setSessions(sessions.map(s => s.id === editingSession.id ? updatedSession : s));
+              setEditingSession(null);
+            }
+          } else {
+            // CREAR
+            const resp = await fetch(`${API_URL}/api/sesiones`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(sessionData)
+            });
+
+            if (resp.ok) {
+              const data = await resp.json();
+              const newSession = {
+                id: data.sesion.id,
+                type: data.sesion.tipo,
+                buyIn: parseFloat(data.sesion.buy_in),
+                cashOut: data.sesion.cash_out ? parseFloat(data.sesion.cash_out) : undefined,
+                prize: data.sesion.prize ? parseFloat(data.sesion.prize) : undefined,
+                sala: data.sesion.plataforma,
+                modalidad: data.sesion.modalidad || 'N/A',
+                date: data.sesion.fecha,
+                duration: data.sesion.duracion ? parseFloat(data.sesion.duracion) : undefined,
+              };
+              
+              setSessions([newSession, ...sessions]);
+            }
+          }
+
+          setForm({ type: 'cash', buyIn: '', cashOut: '', prize: '', sala: 'PokerStars', modalidad: '', date: new Date().toISOString().split('T')[0], duration: '' });
+          setShowForm(false);
+        } catch (error) {
+          console.error('Error guardando sesión:', error);
+          alert('Error guardando sesión');
+        }
+      };
+
+      // ==========================================
+      // ELIMINAR SESIÓN
+      // ==========================================
+      const deleteSession = async (sessionId) => {
+        if (!confirm('¿Eliminar esta sesión?')) return;
+
+        const token = localStorage.getItem('token');
+
+        try {
+          const resp = await fetch(`${API_URL}/api/sesiones/${sessionId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (resp.ok) {
+            setSessions(sessions.filter(s => s.id !== sessionId));
+          }
+        } catch (error) {
+          console.error('Error eliminando sesión:', error);
+          alert('Error eliminando sesión');
+        }
+      };
+
+      // ==========================================
+      // GRÁFICOS
+      // ==========================================
+      const roomProfit = useMemo(() => {
+        const data = {};
+        sessions.forEach(s => {
+          if (!data[s.sala]) data[s.sala] = 0;
+          data[s.sala] += getProfit(s);
+        });
+        return Object.entries(data).map(([name, profit]) => ({ name, profit })).sort((a, b) => b.profit - a.profit);
+      }, [sessions]);
+
+      const profitTimeline = useMemo(() => {
+        const sorted = [...sessions].sort((a, b) => new Date(a.date) - new Date(b.date));
+        let acc = 0;
+        return sorted.map(s => {
+          acc += getProfit(s);
+          return { date: s.date, profit: acc };
+        });
+      }, [sessions]);
+
+      // ==========================================
+      // RENDER
+      // ==========================================
+      if (loading) {
+        return (
+          <div style={{ background: colors.bg, color: colors.text, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎰</div>
+              <p style={{ fontSize: '18px', color: colors.secondary }}>Cargando...</p>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div style={{ background: colors.bg, color: colors.text, minHeight: '100vh', fontFamily: 'Inter, system-ui', padding: '24px' }}>
+          <style>{`
+            @keyframes colorShift {
+              0% { border-color: #ff1493; box-shadow: 0 0 20px #ff1493; }
+              50% { border-color: #00d4ff; box-shadow: 0 0 20px #00d4ff; }
+              100% { border-color: #ff1493; box-shadow: 0 0 20px #ff1493; }
+            }
+            @keyframes inputColorShift {
+              0% { border-color: #00d4ff; box-shadow: 0 0 8px #00d4ff20; }
+              50% { border-color: #ff1493; box-shadow: 0 0 8px #ff149320; }
+              100% { border-color: #00d4ff; box-shadow: 0 0 8px #00d4ff20; }
+            }
+            @media (max-width: 1024px) {
+              .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            }
+            @media (max-width: 640px) {
+              .stats-grid { grid-template-columns: 1fr !important; }
+            }
+          `}</style>
+
+          <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+            {/* HEADER */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <button
+                  onClick={() => window.location.href = '/'}
+                  style={{
+                    padding: '10px',
+                    background: 'transparent',
+                    border: `2px solid ${colors.primary}`,
+                    color: colors.primary,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontFamily: 'Inter, system-ui'
+                  }}
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: 0 }}>My Stats</h1>
+              </div>
+              <button
+                onClick={() => setShowForm(true)}
+                style={{
+                  padding: '10px 20px',
+                  background: 'transparent',
+                  border: `2px solid ${colors.secondary}`,
+                  color: '#fff',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontFamily: 'Inter, system-ui',
+                  animation: 'colorShift 2.5s ease-in-out infinite'
+                }}
+              >
+                <Plus size={16} /> Registrar
+              </button>
+            </div>
+
+            {/* STATS CARDS */}
+            <div style={{ 
+              background: colors.cardBg,
+              border: `2px solid ${colors.border}30`,
+              borderRadius: '16px',
+              padding: '40px 32px',
+              marginBottom: '32px'
+            }}>
+              <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                {[
+                  { key: 'profit', label: 'Profit', value: sessions.length > 0 ? `$${stats.profit.toFixed(0)}` : '$0', color: stats.profit >= 0 ? colors.success : colors.danger },
+                  { key: 'dias', label: 'Días Jugados', value: stats.dias, color: colors.primary },
+                  { key: 'winrate', label: 'Winrate', value: `${stats.winrate}%`, color: colors.accent },
+                  { key: 'sessions', label: 'Sesiones', value: stats.sessions, color: colors.secondary },
+                ].map((s, i) => (
+                  <div 
+                    key={i} 
+                    onMouseEnter={() => setHoveredStat(s.key)}
+                    onMouseLeave={() => setHoveredStat(null)}
+                    style={{ 
+                      background: colors.bg, 
+                      border: `2px solid ${s.color}30`, 
+                      borderRadius: '12px', 
+                      padding: '20px',
+                      position: 'relative',
+                      cursor: 'help',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <p style={{ fontSize: '10px', color: colors.muted, margin: '0 0 12px 0', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>{s.label}</p>
+                    <p style={{ fontSize: '28px', fontWeight: 'bold', color: s.color, margin: 0 }}>{s.value}</p>
+                    
+                    {hoveredStat === s.key && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '100%',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: colors.bg,
+                        border: `1px solid ${s.color}`,
+                        borderRadius: '6px',
+                        padding: '12px',
+                        marginBottom: '8px',
+                        whiteSpace: 'nowrap',
+                        fontSize: '11px',
+                        color: colors.text,
+                        zIndex: 10,
+                        boxShadow: `0 4px 12px rgba(0,0,0,0.3)`,
+                        pointerEvents: 'none'
+                      }}>
+                        {statInfo[s.key].calc}
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: '0',
+                          height: '0',
+                          borderLeft: '6px solid transparent',
+                          borderRight: '6px solid transparent',
+                          borderTop: `6px solid ${s.color}`,
+                        }} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* MENSAJE VACÍO */}
+            {sessions.length === 0 && !showForm && (
+              <div style={{ textAlign: 'center', paddingTop: '40px', color: colors.muted }}>
+                <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>📊 No hay sesiones</p>
+                <p style={{ fontSize: '14px', marginBottom: '24px' }}>Registra tu primera sesión para comenzar a ver estadísticas</p>
+              </div>
+            )}
+
+            {/* FORMULARIO */}
+            {showForm && (
+              <div style={{ background: colors.cardBg, border: `2px solid ${colors.secondary}`, borderRadius: '12px', padding: '28px', marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0 0 24px 0' }}>
+                  {editingSession ? '✏️ Editar' : '➕ Nueva Sesión'}
+                </h2>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: 'bold', color: colors.muted, textTransform: 'uppercase' }}>Tipo</label>
+                    <select value={form.type} onChange={(e) => setForm({...form, type: e.target.value})} style={{width: '100%', background: colors.bg, border: `2px solid ${colors.secondary}`, borderRadius: '6px', padding: '10px', color: colors.text, fontSize: '13px', outline: 'none', cursor: 'pointer', marginTop: '6px', boxSizing: 'border-box', fontFamily: 'Inter, system-ui'}}>
+                      <option value="cash">Cash</option>
+                      <option value="sng">SNG</option>
+                      <option value="tournament">Tournament</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: 'bold', color: colors.muted, textTransform: 'uppercase' }}>Buy-in *</label>
+                    <input type="number" value={form.buyIn} onChange={(e) => setForm({...form, buyIn: e.target.value})} placeholder="0" style={{width: '100%', background: colors.bg, border: `2px solid ${colors.secondary}`, borderRadius: '6px', padding: '10px', color: colors.text, fontSize: '13px', outline: 'none', marginTop: '6px', boxSizing: 'border-box', fontFamily: 'Inter, system-ui'}} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: 'bold', color: colors.muted, textTransform: 'uppercase' }}>{form.type === 'cash' ? 'Cash Out' : 'Prize'}</label>
+                    <input type="number" value={form.type === 'cash' ? form.cashOut : form.prize} onChange={(e) => setForm({...form, [form.type === 'cash' ? 'cashOut' : 'prize']: e.target.value})} placeholder="0" style={{width: '100%', background: colors.bg, border: `2px solid ${colors.secondary}`, borderRadius: '6px', padding: '10px', color: colors.text, fontSize: '13px', outline: 'none', marginTop: '6px', boxSizing: 'border-box', fontFamily: 'Inter, system-ui'}} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: 'bold', color: colors.muted, textTransform: 'uppercase' }}>Sala *</label>
+                    <select value={form.sala} onChange={(e) => setForm({...form, sala: e.target.value})} style={{width: '100%', background: colors.bg, border: `2px solid ${colors.secondary}`, borderRadius: '6px', padding: '10px', color: colors.text, fontSize: '13px', outline: 'none', cursor: 'pointer', marginTop: '6px', boxSizing: 'border-box', fontFamily: 'Inter, system-ui'}}>
+                      {SALAS.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  {form.type === 'cash' && (
+                    <div>
+                      <label style={{ fontSize: '11px', fontWeight: 'bold', color: colors.muted, textTransform: 'uppercase' }}>Modalidad</label>
+                      <select value={form.modalidad} onChange={(e) => setForm({...form, modalidad: e.target.value})} style={{width: '100%', background: colors.bg, border: `2px solid ${colors.secondary}`, borderRadius: '6px', padding: '10px', color: colors.text, fontSize: '13px', outline: 'none', cursor: 'pointer', marginTop: '6px', boxSizing: 'border-box', fontFamily: 'Inter, system-ui'}}>
+                        <option value="">Seleccionar</option>
+                        <option value="NLHE 0.25/0.50">NLHE 0.25/0.50</option>
+                        <option value="NLHE 0.50/1">NLHE 0.50/1</option>
+                        <option value="NLHE 1/2">NLHE 1/2</option>
+                        <option value="NLHE 2/5">NLHE 2/5</option>
+                        <option value="PLO 1/2">PLO 1/2</option>
+                      </select>
+                    </div>
+                  )}
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: 'bold', color: colors.muted, textTransform: 'uppercase' }}>Fecha *</label>
+                    <input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} style={{width: '100%', background: colors.bg, border: `2px solid ${colors.secondary}`, borderRadius: '6px', padding: '10px', color: colors.text, fontSize: '13px', outline: 'none', marginTop: '6px', boxSizing: 'border-box', fontFamily: 'Inter, system-ui'}} />
+                  </div>
+                  {form.type === 'cash' && (
+                    <div>
+                      <label style={{ fontSize: '11px', fontWeight: 'bold', color: colors.muted, textTransform: 'uppercase' }}>Duración (hs)</label>
+                      <input type="number" value={form.duration} onChange={(e) => setForm({...form, duration: e.target.value})} placeholder="0" style={{width: '100%', background: colors.bg, border: `2px solid ${colors.secondary}`, borderRadius: '6px', padding: '10px', color: colors.text, fontSize: '13px', outline: 'none', marginTop: '6px', boxSizing: 'border-box', fontFamily: 'Inter, system-ui'}} />
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button onClick={() => {setShowForm(false); setEditingSession(null);}} style={{padding: '12px 32px', background: 'transparent', border: `2px solid ${colors.primary}`, color: '#fff', borderRadius: '6px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'Inter, system-ui'}}>
+                    ✕ Cancelar
+                  </button>
+                  <button onClick={addSession} style={{padding: '12px 32px', background: 'transparent', border: `2px solid ${colors.secondary}`, color: '#fff', borderRadius: '6px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'Inter, system-ui'}}>
+                    ✓ {editingSession ? 'Actualizar' : 'Registrar'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* LISTA DE SESIONES */}
+            {sessions.length > 0 && (
+              <div style={{ background: colors.cardBg, border: `1px solid ${colors.border}30`, borderRadius: '12px', padding: '24px', marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: '0 0 16px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  Mis Sesiones ({sessions.length})
+                </h2>
+
+                {sessions.map(s => {
+                  const profit = getProfit(s);
+                  const isWin = profit > 0;
+                  const isExp = expandedSessions.has(s.id);
+
+                  return (
+                    <div key={s.id} style={{ marginBottom: '8px' }}>
+                      <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px', background: colors.bg, border: `1px solid ${colors.border}30`, borderLeft: `4px solid ${isWin ? colors.success : colors.danger}`, borderRadius: '8px', gap: '12px', flexWrap: 'wrap'}}>
+                        <div onClick={() => {const newSet = new Set(expandedSessions); newSet.has(s.id) ? newSet.delete(s.id) : newSet.add(s.id); setExpandedSessions(newSet);}} style={{ flex: '1 1 auto', minWidth: '200px', cursor: 'pointer' }}>
+                          <p style={{ fontSize: '13px', fontWeight: 'bold', color: colors.text, margin: '0 0 4px 0' }}>{s.sala}</p>
+                          <p style={{ fontSize: '11px', color: colors.muted, margin: 0 }}>{s.date} • {s.type}</p>
+                        </div>
+                        <div style={{ textAlign: 'right', marginRight: '8px', cursor: 'pointer' }} onClick={() => {const newSet = new Set(expandedSessions); newSet.has(s.id) ? newSet.delete(s.id) : newSet.add(s.id); setExpandedSessions(newSet);}}>
+                          <p style={{ fontSize: '13px', fontWeight: 'bold', color: colors.text, margin: 0 }}>Buy: ${s.buyIn}</p>
+                          <p style={{ fontSize: '13px', fontWeight: 'bold', color: isWin ? colors.success : colors.danger, margin: 0 }}>{isWin ? '+' : ''} ${profit.toFixed(0)}</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={(e) => {e.stopPropagation(); setEditingSession(s); setForm({type: s.type, buyIn: s.buyIn.toString(), cashOut: s.cashOut?.toString() || '', prize: s.prize?.toString() || '', sala: s.sala, modalidad: s.modalidad, date: s.date, duration: s.duration?.toString() || ''}); setShowForm(true);}} style={{padding: '8px 12px', background: 'transparent', border: `2px solid ${colors.primary}`, color: colors.primary, borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'Inter, system-ui', minWidth: '60px'}}>
+                            ✏️
+                          </button>
+                          <button onClick={(e) => {e.stopPropagation(); deleteSession(s.id);}} style={{padding: '8px 12px', background: 'transparent', border: `2px solid ${colors.danger}`, color: colors.danger, borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'Inter, system-ui', minWidth: '60px'}}>
+                            🗑️
+                          </button>
+                        </div>
+                        <ChevronDown size={20} style={{ transform: isExp ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', color: colors.primary, cursor: 'pointer' }} onClick={() => {const newSet = new Set(expandedSessions); newSet.has(s.id) ? newSet.delete(s.id) : newSet.add(s.id); setExpandedSessions(newSet);}} />
+                      </div>
+
+                      {isExp && (
+                        <div style={{ background: colors.bg, border: `1px solid ${colors.border}30`, borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '16px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '16px' }}>
+                            <div>
+                              <p style={{ color: colors.muted, margin: '0 0 6px 0', fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold' }}>Buy-in</p>
+                              <p style={{ color: colors.secondary, fontWeight: 'bold', margin: 0, fontSize: '14px' }}>${s.buyIn}</p>
+                            </div>
+                            {s.type === 'cash' && (
+                              <>
+                                <div>
+                                  <p style={{ color: colors.muted, margin: '0 0 6px 0', fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold' }}>Cash Out</p>
+                                  <p style={{ color: colors.secondary, fontWeight: 'bold', margin: 0, fontSize: '14px' }}>${s.cashOut}</p>
+                                </div>
+                                {s.duration && (
+                                  <div>
+                                    <p style={{ color: colors.muted, margin: '0 0 6px 0', fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold' }}>Duración</p>
+                                    <p style={{ color: colors.secondary, fontWeight: 'bold', margin: 0, fontSize: '14px' }}>{s.duration}h</p>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                            {s.type !== 'cash' && s.prize && (
+                              <div>
+                                <p style={{ color: colors.muted, margin: '0 0 6px 0', fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold' }}>Prize</p>
+                                <p style={{ color: colors.secondary, fontWeight: 'bold', margin: 0, fontSize: '14px' }}>${s.prize}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* GRÁFICOS */}
+            {sessions.length > 0 && (
+              <>
+                {profitTimeline.length > 0 && (
+                  <div style={{ background: colors.cardBg, border: `1px solid ${colors.border}30`, borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: '0 0 16px 0', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <TrendingUp size={16} style={{ color: colors.primary }} /> Evolución
+                    </h2>
+                    <div style={{ height: '200px', background: colors.bg, borderRadius: '8px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', padding: '16px', gap: '6px' }}>
+                      {profitTimeline.map((p, i) => {
+                        const maxProfit = Math.max(...profitTimeline.map(x => Math.abs(x.profit)), 1);
+                        const h = (Math.abs(p.profit) / maxProfit) * 100;
+                        return (
+                          <div key={i} style={{ 
+                            flex: 1, 
+                            height: `${Math.max(h, 5)}%`, 
+                            background: `linear-gradient(to top, ${colors.primary}, ${colors.secondary})`, 
+                            borderRadius: '4px 4px 0 0',
+                            boxShadow: `0 0 10px ${colors.primary}40`
+                          }} />
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {roomProfit.length > 0 && (
+                  <div style={{ background: colors.cardBg, border: `1px solid ${colors.border}30`, borderRadius: '12px', padding: '24px' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: '0 0 16px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      Profit por Sala
+                    </h2>
+                    <div style={{ height: '200px', background: colors.bg, borderRadius: '8px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', padding: '16px', gap: '12px' }}>
+                      {roomProfit.map((item, i) => {
+                        const maxProfit = Math.max(...roomProfit.map(x => Math.abs(x.profit)), 1);
+                        const h = (Math.abs(item.profit) / maxProfit) * 100;
+                        const isPos = item.profit >= 0;
+                        return (
+                          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{
+                              width: '100%',
+                              height: `${Math.max(h, 5)}%`,
+                              background: isPos ? `linear-gradient(to top, ${colors.success}, ${colors.success}99)` : `linear-gradient(to top, ${colors.danger}, ${colors.danger}99)`,
+                              borderRadius: '4px 4px 0 0',
+                              marginBottom: '8px',
+                              boxShadow: `0 0 10px ${isPos ? colors.success : colors.danger}40`
+                            }} />
+                            <p style={{ fontSize: '10px', color: colors.muted }}>{item.name}</p>
+                            <p style={{ fontSize: '11px', fontWeight: 'bold', color: isPos ? colors.success : colors.danger }}>${item.profit.toFixed(0)}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<PokerTracker />);
+  </script>
+</body>
+</html>
