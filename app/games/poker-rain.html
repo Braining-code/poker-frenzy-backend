@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poker Rain - Poker Frenzy</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0;">
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const THEME = {
+      BG: '#0B0B0D',
+      PRIMARY: '#D946EF',
+      ACCENT: '#22D3EE',
+      TEXT: '#E5E7EB',
+      TEXT_MUTED: '#9CA3AF',
+      CARD_BG: '#ffffff',
+      BORDER: 'rgba(217, 70, 239, 0.25)',
+      BORDER_STRONG: 'rgba(217, 70, 239, 0.4)',
+    };
+
+    class AudioManager {
+      constructor() {
+        this.audioContext = null;
+        this.masterVolume = 0.25;
+        this.bgMusicRunning = false;
+        this.bgMusicInterval = null;
+      }
+
+      initAudio() {
+        if (!this.audioContext) {
+          this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+
+      startBgMusic() {
+        if (!this.audioContext) this.initAudio();
+        if (this.bgMusicRunning) return;
+        this.bgMusicRunning = true;
+
+        const playLoopSequence = () => {
+          if (!this.bgMusicRunning) return;
+
+          const sequence = [
+            { freq: 110, duration: 2, type: 'sine', vol: 0.04 },
+            { freq: 146.83, duration: 2, type: 'sine', vol: 0.035 },
+            { freq: 110, duration: 2, type: 'sine', vol: 0.04 },
+            { freq: 123.47, duration: 2, type: 'sine', vol: 0.035 },
+          ];
+
+          sequence.forEach((note, idx) => {
+            setTimeout(() => {
+              if (!this.bgMusicRunning) return;
+              try {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                const filter = this.audioContext.createBiquadFilter();
+
+                osc.type = note.type;
+                osc.frequency.value = note.freq;
+                gain.gain.setValueAtTime(note.vol * this.masterVolume, this.audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(note.vol * this.masterVolume * 0.8, this.audioContext.currentTime + note.duration);
+
+                filter.type = 'lowpass';
+                filter.frequency.value = 250;
+                filter.Q.value = 1;
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.audioContext.destination);
+
+                osc.start(this.audioContext.currentTime);
+                osc.stop(this.audioContext.currentTime + note.duration);
+              } catch (e) {
+                console.log('Audio error:', e);
+              }
+            }, idx * 600);
+          });
+        };
+
+        playLoopSequence();
+        this.bgMusicInterval = setInterval(playLoopSequence, 4800);
+      }
+
+      stopBgMusic() {
+        this.bgMusicRunning = false;
+        if (this.bgMusicInterval) clearInterval(this.bgMusicInterval);
+      }
+
+      playTone(frequency, duration, type = 'sine', volume = 0.3) {
+        if (!this.audioContext) this.initAudio();
+        const now = this.audioContext.currentTime;
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        osc.type = type;
+        osc.frequency.value = frequency;
+        gain.gain.setValueAtTime(volume * this.masterVolume, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+        osc.connect(gain);
+        gain.connect(this.audioContext.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+      }
+
+      selectCard() {
+        this.playTone(900, 0.08, 'triangle', 0.25);
+        setTimeout(() => this.playTone(1100, 0.06, 'triangle', 0.2), 50);
+      }
+
+      completeHand(handType) {
+        const sequences = {
+          'ESCALERA REAL': [1400, 1600, 1800, 2000, 1800],
+          'ESCALERA COLOR': [1300, 1500, 1700, 1500],
+          'POKER': [1200, 1400, 1600, 1400],
+          'FULL': [1100, 1300, 1500],
+          'ESCALERA': [1000, 1200, 1400],
+          'COLOR': [950, 1150, 1350],
+          'TRIO': [900, 1100, 1300],
+          'DOS PARES': [850, 1050, 1250],
+          'PAR': [800, 1000, 1200],
+        };
+        const freqs = sequences[handType] || [800, 1000, 1200];
+        freqs.forEach((freq, idx) => {
+          setTimeout(() => this.playTone(freq, 0.12, 'square', 0.28), idx * 70);
+        });
+      }
+
+      urgentTick() {
+        this.playTone(1200, 0.08, 'sine', 0.3);
+        this.playTone(1400, 0.08, 'sine', 0.2);
+      }
+
+      gameOver() {
+        this.playTone(600, 0.15, 'sine', 0.25);
+        setTimeout(() => this.playTone(500, 0.2, 'sine', 0.25), 100);
+        setTimeout(() => this.playTone(400, 0.25, 'sine', 0.25), 200);
+      }
+    }
+
+    const audioManager = new AudioManager();
+
+    function PokerRain() {
+      const containerRef = useRef(null);
+      const cardCounterRef = useRef(0);
+      const deckRef = useRef([]);
+      
+      const [gameRunning, setGameRunning] = useState(false);
+      const [balance, setBalance] = useState(10000);
+      const [currentScore, setCurrentScore] = useState(0);
+      const [timeLeft, setTimeLeft] = useState(0);
+      const [cards, setCards] = useState([]);
+      const [selected, setSelected] = useState([]);
+      const [message, setMessage] = useState('');
+      const [gameHistory, setGameHistory] = useState([]);
+      const [droppedCardIds, setDroppedCardIds] = useState(new Set());
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoStep, setInfoStep] = useState(0);
+
+      const SUITS = ['♠', '♥', '♦', '♣'];
+      const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+      
+      const HAND_SCORES = {
+        'ESCALERA REAL': 1000,
+        'ESCALERA COLOR': 500,
+        'POKER': 300,
+        'FULL': 200,
+        'ESCALERA': 150,
+        'COLOR': 100,
+        'TRIO': 75,
+        'DOS PARES': 50,
+        'PAR': 25
+      };
+
+      const tutorialSteps = [
+        { title: 'BIENVENIDO A POKER RAIN', description: 'Selecciona 5 cartas antes de que caigan para formar manos de póker y ganar puntos.' },
+        { title: 'CÓMO JUGAR', description: 'Las cartas caen desde arriba. Haz click en ellas para seleccionarlas. Una vez selecciones 5, se evaluará tu mano automáticamente.' },
+        { title: 'TABLA DE PUNTOS', description: 'ESCALERA REAL: 1000pts\nESCALERA COLOR: 500pts\nPOKER: 300pts\nFULL: 200pts\nESCALERA: 150pts\nCOLOR: 100pts\nTRIO: 75pts\nDOS PARES: 50pts\nPAR: 25pts' },
+        { title: 'EL JUEGO', description: 'Tienes 60 segundos para hacer el máximo de manos. Cada mano que no completes cuesta -5 puntos. Al terminar, tus ganancias se suman al balance.' },
+        { title: 'ESTRATEGIA', description: 'Prioriza manos altas (ESCALERA REAL, POKER). Las cartas caen rápido, así que debes ser rápido. ¿Estás listo?' }
+      ];
+
+      const initializeDeck = () => {
+        const newDeck = [];
+        for (let suit of SUITS) {
+          for (let value of VALUES) {
+            newDeck.push({ suit, value });
+          }
+        }
+        for (let i = newDeck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+        }
+        deckRef.current = newDeck;
+      };
+
+      const generateCard = (id) => {
+        const w = containerRef.current?.offsetWidth || 480;
+        if (deckRef.current.length === 0) initializeDeck();
+        const deckCard = deckRef.current.shift();
+        return {
+          id, suit: deckCard.suit, value: deckCard.value,
+          x: Math.random() * Math.max(0, w - 75), y: -140,
+          vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 1,
+          rotation: Math.random() * 360, rotationVel: (Math.random() - 0.5) * 15
+        };
+      };
+
+      const detectHand = (hand) => {
+        if (hand.length < 5) return null;
+        const valueCount = {}, suitCount = {};
+        hand.forEach(card => {
+          valueCount[card.value] = (valueCount[card.value] || 0) + 1;
+          suitCount[card.suit] = (suitCount[card.suit] || 0) + 1;
+        });
+        const counts = Object.values(valueCount).sort((a, b) => b - a);
+        const isFlush = Object.values(suitCount).some(count => count >= 5);
+        const valueOrder = { 'A': 14, 'K': 13, 'Q': 12, 'J': 11, '10': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
+        const uniqueValues = [...new Set(hand.map(c => valueOrder[c.value]))].sort((a, b) => b - a);
+        let isStraight = false;
+        for (let i = 0; i <= uniqueValues.length - 5; i++) {
+          const slice = uniqueValues.slice(i, i + 5);
+          if (slice[0] - slice[4] === 4 && slice.every((v, idx) => idx === 0 || v === slice[idx - 1] - 1)) {
+            isStraight = true;
+            break;
+          }
+        }
+        if (!isStraight && uniqueValues.includes(14)) {
+          const lowValues = uniqueValues.filter(v => v <= 5).sort((a, b) => b - a);
+          if (lowValues.length >= 4 && lowValues[0] === 5 && lowValues.includes(4) && lowValues.includes(3) && lowValues.includes(2)) {
+            isStraight = true;
+          }
+        }
+        if (isFlush && isStraight) {
+          if (uniqueValues.includes(14) && uniqueValues.includes(13) && uniqueValues.includes(12) && uniqueValues.includes(11) && uniqueValues.includes(10)) {
+            return 'ESCALERA REAL';
+          }
+          return 'ESCALERA COLOR';
+        }
+        if (counts[0] === 4) return 'POKER';
+        if (counts[0] === 3 && counts[1] === 2) return 'FULL';
+        if (isStraight) return 'ESCALERA';
+        if (isFlush) return 'COLOR';
+        if (counts[0] === 3) return 'TRIO';
+        if (counts[0] === 2 && counts[1] === 2) return 'DOS PARES';
+        if (counts[0] === 2) return 'PAR';
+        return null;
+      };
+
+      const startGame = () => {
+        if (balance < 1000) { alert('Sin saldo'); return; }
+        initializeDeck();
+        setGameRunning(true);
+        setCurrentScore(0);
+        setTimeLeft(60);
+        setSelected([]);
+        setMessage('');
+        setCards([]);
+        setGameHistory([]);
+        setDroppedCardIds(new Set());
+        setBalance(p => p - 1000);
+        cardCounterRef.current = 0;
+        audioManager.initAudio();
+        audioManager.startBgMusic();
+      };
+
+      useEffect(() => {
+        if (!gameRunning || !containerRef.current) return;
+        const interval = setInterval(() => {
+          setCards(prevCards => {
+            const h = containerRef.current?.offsetHeight || 400;
+            const w = containerRef.current?.offsetWidth || 480;
+            return prevCards.map(card => {
+              const u = { ...card };
+              u.y += u.vy; u.x += u.vx; u.rotation += u.rotationVel; u.vy += 0.08; u.vx *= 0.995;
+              if (u.x < 0) { u.x = 0; u.vx = Math.abs(u.vx) * 0.7; }
+              if (u.x > w - 75) { u.x = w - 75; u.vx = -Math.abs(u.vx) * 0.7; }
+              return u;
+            }).filter(card => {
+              if (card.y > h && !selected.find(s => s.id === card.id)) {
+                if (!droppedCardIds.has(card.id)) {
+                  setDroppedCardIds(prev => new Set([...prev, card.id]));
+                  setCurrentScore(p => Math.max(0, p - 5));
+                }
+                return false;
+              }
+              return card.y <= h + 100;
+            });
+          });
+        }, 40);
+        return () => clearInterval(interval);
+      }, [gameRunning, selected, droppedCardIds]);
+
+      useEffect(() => {
+        if (!gameRunning) return;
+        const spawnInterval = setInterval(() => {
+          for (let i = 0; i < 2; i++) {
+            setCards(prev => [...prev, generateCard(cardCounterRef.current++)]);
+          }
+        }, 300);
+        return () => clearInterval(spawnInterval);
+      }, [gameRunning]);
+
+      useEffect(() => {
+        if (!gameRunning || timeLeft === 0) return;
+        const timerInterval = setInterval(() => {
+          setTimeLeft(prev => {
+            if (prev === 5 || prev === 4 || prev === 3 || prev === 2 || prev === 1) {
+              audioManager.urgentTick();
+            }
+            if (prev <= 1) {
+              setGameRunning(false);
+              setBalance(p => p + currentScore);
+              audioManager.stopBgMusic();
+              audioManager.gameOver();
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        return () => clearInterval(timerInterval);
+      }, [gameRunning, currentScore]);
+
+      const toggleCard = (cardId) => {
+        setSelected(prev => {
+          const exists = prev.find(c => c.id === cardId);
+          if (exists) return prev.filter(c => c.id !== cardId);
+          if (prev.length >= 5) return prev;
+          const card = cards.find(c => c.id === cardId);
+          const newSelected = card ? [...prev, card] : prev;
+          audioManager.selectCard();
+          if (newSelected.length === 5) {
+            setTimeout(() => submitHand(newSelected), 100);
+          }
+          return newSelected;
+        });
+      };
+
+      const submitHand = (selectedCards = null) => {
+        const cardsToCheck = selectedCards || selected;
+        if (cardsToCheck.length !== 5) return;
+        const handType = detectHand(cardsToCheck);
+        const points = handType ? HAND_SCORES[handType] : 0;
+        setGameHistory(prev => [...prev, { id: Date.now(), hand: handType || 'SIN MANO', points: points, cards: cardsToCheck.map(c => `${c.value}${c.suit}`) }]);
+        if (points > 0) {
+          setCurrentScore(prev => prev + points);
+          audioManager.completeHand(handType);
+          setMessage(`${handType}\n+${points}`);
+          setCards(prev => prev.filter(c => !cardsToCheck.find(s => s.id === c.id)));
+          setSelected([]);
+          setTimeout(() => setMessage(''), 1200);
+        } else {
+          setMessage(`${handType ? handType : 'SIN MANO'}`);
+          setCards(prev => prev.filter(c => !cardsToCheck.find(s => s.id === c.id)));
+          setSelected([]);
+          setTimeout(() => setMessage(''), 1200);
+        }
+      };
+
+      const getSuitColor = (suit) => suit === '♥' || suit === '♦' ? '#dc2626' : '#1f2937';
+      const totalEarnings = gameHistory.reduce((sum, entry) => sum + entry.points, 0);
+      const netResult = totalEarnings - 1000;
+
+      return (
+        <div style={{ width: '100%', minHeight: '100vh', background: '#000', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0' }}>
+          <div style={{ width: '100%', maxWidth: '480px', height: '100vh', background: THEME.BG, fontFamily: "'Poppins', sans-serif", color: THEME.TEXT, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            
+            <div style={{ padding: '16px 20px', background: THEME.BG, borderBottom: `1px solid ${THEME.BORDER_STRONG}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button onClick={() => window.location.href = '/'} style={{ background: 'transparent', border: `2px solid ${THEME.PRIMARY}`, color: THEME.PRIMARY, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>← VOLVER</button>
+                <div style={{ fontSize: '16px', fontWeight: '700', color: THEME.TEXT }}>POKER RAIN</div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px', alignItems: 'center' }}>
+                <div style={{ color: THEME.TEXT_MUTED }}>B: <span style={{ color: THEME.PRIMARY }}>${balance}</span></div>
+                <div style={{ color: THEME.TEXT_MUTED }}>⏱ <span style={{ color: THEME.ACCENT }}>{String(timeLeft).padStart(2, '0')}s</span></div>
+                <button onClick={() => { setShowInfo(true); setInfoStep(0); }} style={{ background: 'transparent', border: 'none', color: THEME.ACCENT, fontSize: '16px', cursor: 'pointer', padding: '0 4px', marginLeft: '4px' }}>ⓘ</button>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: 'column' }}>
+              <div ref={containerRef} style={{ flex: 1, position: 'relative', background: THEME.BG, border: `1px solid ${THEME.BORDER_STRONG}`, overflow: 'hidden', margin: '1px' }}>
+                
+                {cards.map(card => {
+                  const isSelected = selected.find(c => c.id === card.id);
+                  return (
+                    <div key={card.id} onClick={() => toggleCard(card.id)} style={{ position: 'absolute', left: card.x, top: card.y, transform: `rotate(${card.rotation}deg) scale(${isSelected ? 1.08 : 1})`, cursor: 'pointer', zIndex: isSelected ? 100 : 10, transition: 'transform 0.15s ease-out', userSelect: 'none' }}>
+                      <div style={{ width: '75px', height: '105px', background: THEME.CARD_BG, border: isSelected ? `2px solid ${THEME.PRIMARY}` : '1px solid #e5e7eb', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-around', padding: '6px', boxShadow: isSelected ? `0 4px 12px rgba(217, 70, 239, 0.3)` : '0 2px 8px rgba(0, 0, 0, 0.3)', fontWeight: '900' }}>
+                        <div style={{ fontSize: '16px', color: getSuitColor(card.suit), lineHeight: '1' }}>{card.value}</div>
+                        <div style={{ fontSize: '24px', color: getSuitColor(card.suit), lineHeight: '1' }}>{card.suit}</div>
+                        <div style={{ fontSize: '16px', color: getSuitColor(card.suit), lineHeight: '1' }}>{card.value}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {message && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 200, fontSize: '18px', fontWeight: '700', color: THEME.PRIMARY, whiteSpace: 'pre-line', lineHeight: '1.5', animation: 'fadeInUp 0.5s ease-out' }}>{message}</div>}
+
+                {!gameRunning && timeLeft === 0 && (
+                  <div style={{ position: 'absolute', top: '0', left: '0', right: '0', bottom: '0', background: THEME.BG, zIndex: 150, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '40px 24px 32px 24px', overflowY: 'auto' }}>
+                    <div style={{ textAlign: 'center', width: '100%' }}>
+                      <div style={{ fontSize: '22px', fontWeight: '700', color: THEME.PRIMARY, marginBottom: '28px' }}>RESULTADO</div>
+                      <div style={{ maxHeight: '140px', overflowY: 'auto', marginBottom: '28px', width: '100%' }}>
+                        {gameHistory.length === 0 ? (
+                          <div style={{ color: THEME.TEXT_MUTED, fontSize: '12px' }}>Sin manos completadas</div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {gameHistory.map((entry) => (
+                              <div key={entry.id} style={{ background: 'transparent', border: `1px solid ${THEME.BORDER}`, borderRadius: '6px', padding: '10px', fontSize: '11px' }}>
+                                <div style={{ fontWeight: '700', color: entry.points > 0 ? THEME.PRIMARY : THEME.TEXT_MUTED }}>{entry.hand}</div>
+                                <div style={{ color: THEME.ACCENT, fontWeight: '600', marginTop: '3px' }}>+{entry.points}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ background: 'transparent', border: `1px solid ${THEME.BORDER_STRONG}`, borderRadius: '8px', padding: '20px', marginBottom: '28px', width: '100%' }}>
+                        <div style={{ fontSize: '10px', color: THEME.TEXT_MUTED, marginBottom: '12px', textTransform: 'uppercase' }}>Ganancias Netas</div>
+                        <div style={{ fontSize: '36px', fontWeight: '700', color: netResult > 0 ? THEME.PRIMARY : '#ef4444' }}>${netResult}</div>
+                        <div style={{ fontSize: '10px', color: THEME.TEXT_MUTED, marginTop: '12px' }}>Mano: <span style={{ color: THEME.PRIMARY }}>${totalEarnings}</span> | Balance: <span style={{ color: THEME.PRIMARY }}>${balance}</span></div>
+                      </div>
+                    </div>
+                    <button onClick={startGame} style={{ padding: '14px 0', fontSize: '12px', fontWeight: '700', background: balance >= 1000 ? THEME.PRIMARY : '#4b5563', color: balance >= 1000 ? '#fff' : THEME.TEXT_MUTED, border: `1px solid ${THEME.BORDER}`, borderRadius: '6px', cursor: balance >= 1000 ? 'pointer' : 'not-allowed', width: '60%', textTransform: 'uppercase', opacity: balance >= 1000 ? 1 : 0.5, boxShadow: balance >= 1000 ? `0 0 20px rgba(217, 70, 239, 0.6), 0 0 40px rgba(217, 70, 239, 0.3)` : 'none', alignSelf: 'center', marginTop: 'auto' }}>Jugar Ahora</button>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ padding: '14px 20px', background: THEME.BG, borderTop: `1px solid ${THEME.BORDER_STRONG}`, display: 'flex', flexDirection: 'column', gap: '12px', margin: '1px 1px 0 1px' }}>
+                <div style={{ background: 'transparent', border: `1px solid ${THEME.BORDER_STRONG}`, borderRadius: '8px', padding: '12px', display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center', minHeight: '68px' }}>
+                  {[...Array(5)].map((_, idx) => {
+                    const card = selected[idx];
+                    return (
+                      <div key={idx} style={{ width: '44px', height: '62px', background: card ? THEME.CARD_BG : 'transparent', border: card ? `1px solid ${THEME.PRIMARY}` : `1px dashed ${THEME.BORDER}`, borderRadius: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '9px', transition: 'all 0.15s ease' }}>
+                        {card ? (<><div style={{ fontSize: '12px', color: getSuitColor(card.suit), fontWeight: '900', lineHeight: '1' }}>{card.value}</div><div style={{ fontSize: '14px', color: getSuitColor(card.suit), marginTop: '2px', lineHeight: '1', fontWeight: '900' }}>{card.suit}</div></>) : (<div style={{ color: THEME.TEXT_MUTED }}>-</div>)}
+                      </div>
+                    );
+                  })}
+                </div>
+                {selected.length > 0 && (<button onClick={() => setSelected([])} style={{ padding: '8px', fontSize: '9px', fontWeight: '700', background: 'transparent', border: `1px solid ${THEME.BORDER}`, color: THEME.TEXT_MUTED, borderRadius: '6px', cursor: 'pointer', width: '100%', textTransform: 'uppercase' }}>Limpiar</button>)}
+              </div>
+
+              <div style={{ maxHeight: '100px', background: THEME.BG, border: `1px solid ${THEME.BORDER_STRONG}`, display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: '1px' }}>
+                <div style={{ padding: '8px', borderBottom: `1px solid ${THEME.BORDER}`, fontWeight: '700', fontSize: '8px', color: THEME.TEXT_MUTED, textAlign: 'center', textTransform: 'uppercase' }}>Historial</div>
+                <div style={{ flex: 1, overflow: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {gameHistory.length === 0 ? (<div style={{ textAlign: 'center', color: THEME.TEXT_MUTED, fontSize: '9px' }}>Sin juegos</div>) : ([...gameHistory].reverse().slice(0, 3).map((entry) => (<div key={entry.id} style={{ background: 'transparent', border: `1px solid ${THEME.BORDER}`, borderRadius: '4px', padding: '5px 8px', fontSize: '9px' }}><div style={{ fontWeight: '700', color: entry.points > 0 ? THEME.PRIMARY : THEME.TEXT_MUTED, fontSize: '10px' }}>{entry.hand.slice(0, 14)}</div><div style={{ color: THEME.ACCENT, fontSize: '9px', fontWeight: '600', marginTop: '2px' }}>+{entry.points}</div></div>)))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {showInfo && (
+            <div style={{ position: 'fixed', top: '0', left: '0', right: '0', bottom: '0', background: 'rgba(0, 0, 0, 0.95)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(5px)' }}>
+              <div style={{ background: THEME.BG, border: `2px solid ${THEME.PRIMARY}`, borderRadius: '12px', padding: '40px 32px', maxWidth: '380px', textAlign: 'center', boxShadow: `0 0 40px rgba(217, 70, 239, 0.3)` }}>
+                <h2 style={{ fontSize: '20px', fontWeight: '700', color: THEME.PRIMARY, marginBottom: '20px' }}>{tutorialSteps[infoStep].title}</h2>
+                <p style={{ fontSize: '14px', color: THEME.TEXT, lineHeight: '1.6', marginBottom: '32px', whiteSpace: 'pre-wrap' }}>{tutorialSteps[infoStep].description}</p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  {infoStep > 0 && (<button onClick={() => setInfoStep(infoStep - 1)} style={{ padding: '10px 20px', fontSize: '12px', fontWeight: '700', background: 'transparent', border: `1px solid ${THEME.BORDER}`, color: THEME.TEXT_MUTED, borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }}>Atrás</button>)}
+                  {infoStep < tutorialSteps.length - 1 ? (<button onClick={() => setInfoStep(infoStep + 1)} style={{ padding: '10px 20px', fontSize: '12px', fontWeight: '700', background: THEME.PRIMARY, color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase', boxShadow: `0 0 15px rgba(217, 70, 239, 0.4)` }}>Siguiente</button>) : (<button onClick={() => setShowInfo(false)} style={{ padding: '10px 20px', fontSize: '12px', fontWeight: '700', background: THEME.PRIMARY, color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase', boxShadow: `0 0 15px rgba(217, 70, 239, 0.4)` }}>Entendido</button>)}
+                </div>
+                <div style={{ marginTop: '20px', fontSize: '10px', color: THEME.TEXT_MUTED }}>{infoStep + 1} / {tutorialSteps.length}</div>
+              </div>
+            </div>
+          )}
+
+          <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap');@keyframes fadeInUp{0%{opacity:0;transform:translate(-50%,-40%)}100%{opacity:1;transform:translate(-50%,-50%)}}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(217,70,239,0.3);border-radius:2px}*{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}body{margin:0;padding:0;background:#000}`}</style>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<PokerRain />);
+  </script>
+</body>
+</html>
