@@ -19,7 +19,7 @@
     const API_URL = "https://web-production-e4083.up.railway.app";
 
     // ==========================================
-    // ICONOS INLINE (reemplazo de lucide-react)
+    // ICONOS INLINE
     // ==========================================
     const Plus = ({ size = 16, ...props }) => (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
@@ -32,6 +32,12 @@
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
         <line x1="19" y1="12" x2="5" y2="12"></line>
         <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+    );
+
+    const ArrowRight = ({ size = 16, ...props }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+        <polyline points="9 18 15 12 9 6"></polyline>
       </svg>
     );
 
@@ -58,6 +64,8 @@
       const [editingSession, setEditingSession] = useState(null);
       const [loading, setLoading] = useState(true);
       const [userId, setUserId] = useState(null);
+      const [showInfoModal, setShowInfoModal] = useState(false);
+      const [infoStep, setInfoStep] = useState(1);
 
       const [form, setForm] = useState({
         type: 'cash',
@@ -85,14 +93,19 @@
 
       const SALAS = ['PokerStars', 'GGPoker', 'ACR', 'WPT', 'Otra'];
 
-      const statInfo = {
-        profit: { label: 'Profit', calc: 'Cash Out - Buy In (o Prize - Buy In)' },
-        dias: { label: 'Días Jugados', calc: 'Días únicos en los que jugaste' },
-        winrate: { label: 'Winrate', calc: '(Sesiones Ganadas / Total) × 100' },
-        sessions: { label: 'Sesiones', calc: 'Total de sesiones registradas' }
+      // ==========================================
+      // DATA DE DEMOSTRACIÓN PARA MODAL
+      // ==========================================
+      const demoData = {
+        stats: { profit: 1245, dias: 12, winrate: 65, sessions: 23 },
+        sessions: [
+          { sala: 'PokerStars', date: '2024-12-10', type: 'Cash', buyIn: 100, profit: 245, isWin: true },
+          { sala: 'GGPoker', date: '2024-12-09', type: 'Tournament', buyIn: 50, profit: 120, isWin: true },
+          { sala: 'ACR', date: '2024-12-08', type: 'Cash', buyIn: 200, profit: -80, isWin: false },
+          { sala: 'PokerStars', date: '2024-12-07', type: 'SNG', buyIn: 25, profit: 35, isWin: true },
+          { sala: 'GGPoker', date: '2024-12-06', type: 'Cash', buyIn: 150, profit: 925, isWin: true },
+        ]
       };
-
-      const [hoveredStat, setHoveredStat] = useState(null);
 
       // ==========================================
       // VALIDAR AUTH Y CARGAR SESIONES
@@ -107,7 +120,6 @@
 
         async function cargarDatos() {
           try {
-            // Obtener info del usuario
             const userResp = await fetch(`${API_URL}/api/auth/me`, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -121,7 +133,6 @@
             const userData = await userResp.json();
             setUserId(userData.user.id);
 
-            // Cargar sesiones
             const sesionesResp = await fetch(`${API_URL}/api/sesiones/${userData.user.id}`, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -129,7 +140,6 @@
             if (sesionesResp.ok) {
               const sesionesData = await sesionesResp.json();
               
-              // Mapear datos de API a formato del componente
               const mappedSessions = sesionesData.sesiones.map(s => ({
                 id: s.id,
                 type: s.tipo,
@@ -205,7 +215,6 @@
 
         try {
           if (editingSession) {
-            // EDITAR
             const resp = await fetch(`${API_URL}/api/sesiones/${editingSession.id}`, {
               method: 'PUT',
               headers: {
@@ -233,7 +242,6 @@
               setEditingSession(null);
             }
           } else {
-            // CREAR
             const resp = await fetch(`${API_URL}/api/sesiones`, {
               method: 'POST',
               headers: {
@@ -316,7 +324,157 @@
       }, [sessions]);
 
       // ==========================================
-      // RENDER
+      // RENDER PASOS DEL MODAL
+      // ==========================================
+      const renderOnboardingStep = () => {
+        switch(infoStep) {
+          case 1:
+            return (
+              <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
+                <h2 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 24px 0', color: colors.text }}>🎮 Empieza por Aquí</h2>
+                <p style={{ fontSize: '16px', color: colors.muted, margin: '0 0 32px 0', lineHeight: '1.6' }}>
+                  El botón <strong style={{ color: colors.secondary }}>Registrar</strong> se encuentra en la parte superior derecha, junto al título "My Stats". 
+                </p>
+                <div style={{ background: colors.cardBg, border: `2px solid ${colors.secondary}`, borderRadius: '12px', padding: '32px', marginBottom: '32px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>📍</div>
+                  <p style={{ fontSize: '18px', fontWeight: 'bold', color: colors.text, margin: '0 0 12px 0' }}>Botón "Registrar"</p>
+                  <p style={{ fontSize: '14px', color: colors.muted, margin: '0' }}>Haz clic aquí para crear tu primera sesión</p>
+                  <div style={{ marginTop: '24px', display: 'inline-block', padding: '10px 20px', background: 'transparent', border: `2px solid ${colors.secondary}`, color: colors.secondary, borderRadius: '8px', fontSize: '13px', fontWeight: 'bold' }}>
+                    ✨ Registrar
+                  </div>
+                </div>
+              </div>
+            );
+          case 2:
+            return (
+              <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
+                <h2 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 24px 0', color: colors.text }}>📊 Tus Estadísticas</h2>
+                <p style={{ fontSize: '16px', color: colors.muted, margin: '0 0 32px 0', lineHeight: '1.6' }}>
+                  Una vez registres tus primeras sesiones, verás estas 4 métricas principales actualizarse en tiempo real.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
+                  {[
+                    { label: 'Profit', value: `$${demoData.stats.profit}`, color: colors.success, desc: 'Ganancia total' },
+                    { label: 'Días Jugados', value: demoData.stats.dias, color: colors.primary, desc: 'Días únicos' },
+                    { label: 'Winrate', value: `${demoData.stats.winrate}%`, color: colors.accent, desc: '% de victorias' },
+                    { label: 'Sesiones', value: demoData.stats.sessions, color: colors.secondary, desc: 'Total' },
+                  ].map((s, i) => (
+                    <div key={i} style={{ 
+                      background: colors.cardBg, 
+                      border: `2px solid ${s.color}`, 
+                      borderRadius: '12px', 
+                      padding: '24px',
+                      textAlign: 'center',
+                      boxShadow: `0 0 30px ${s.color}40`,
+                    }}>
+                      <p style={{ fontSize: '11px', color: colors.muted, margin: '0 0 12px 0', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>{s.label}</p>
+                      <p style={{ fontSize: '36px', fontWeight: 'bold', color: s.color, margin: '0 0 8px 0' }}>{s.value}</p>
+                      <p style={{ fontSize: '11px', color: colors.muted, margin: 0 }}>{s.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          case 3:
+            return (
+              <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
+                <h2 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 24px 0', color: colors.text }}>📈 Gráficos Interactivos</h2>
+                <p style={{ fontSize: '16px', color: colors.muted, margin: '0 0 32px 0', lineHeight: '1.6' }}>
+                  Visualiza tu evolución a lo largo del tiempo y ve cómo se distribuye tu ganancia por cada sala de poker.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
+                  <div style={{ background: colors.cardBg, border: `2px solid ${colors.primary}`, borderRadius: '12px', padding: '24px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 20px 0', color: colors.text }}>Evolución del Profit</h3>
+                    <div style={{ height: '200px', background: colors.bg, borderRadius: '8px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', padding: '16px', gap: '6px' }}>
+                      {[120, 250, 180, 450, 600, 750, 920, 1245].map((h, i) => (
+                        <div key={i} style={{ 
+                          flex: 1, 
+                          height: `${(h / 1245) * 100}%`, 
+                          background: `linear-gradient(to top, ${colors.primary}, ${colors.secondary})`, 
+                          borderRadius: '4px 4px 0 0',
+                          boxShadow: `0 0 15px ${colors.primary}50`,
+                        }} />
+                      ))}
+                    </div>
+                    <p style={{ fontSize: '12px', color: colors.muted, margin: '16px 0 0 0', textAlign: 'center' }}>Cada barra = una sesión</p>
+                  </div>
+
+                  <div style={{ background: colors.cardBg, border: `2px solid ${colors.secondary}`, borderRadius: '12px', padding: '24px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 20px 0', color: colors.text }}>Profit por Sala</h3>
+                    <div style={{ height: '200px', background: colors.bg, borderRadius: '8px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', padding: '16px', gap: '12px' }}>
+                      {[
+                        { name: 'PokerStars', profit: 1170 },
+                        { name: 'GGPoker', profit: 1055 },
+                        { name: 'ACR', profit: -80 },
+                      ].map((item, i) => (
+                        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div style={{
+                            width: '100%',
+                            height: `${(Math.abs(item.profit) / 1170) * 100}%`,
+                            background: item.profit >= 0 ? `linear-gradient(to top, ${colors.success}, ${colors.success}99)` : `linear-gradient(to top, ${colors.danger}, ${colors.danger}99)`,
+                            borderRadius: '4px 4px 0 0',
+                            marginBottom: '12px',
+                            boxShadow: `0 0 15px ${item.profit >= 0 ? colors.success : colors.danger}50`,
+                          }} />
+                          <p style={{ fontSize: '12px', color: colors.muted, margin: '0', fontWeight: 'bold' }}>{item.name}</p>
+                          <p style={{ fontSize: '13px', fontWeight: 'bold', color: item.profit >= 0 ? colors.success : colors.danger, margin: '6px 0 0 0' }}>${Math.abs(item.profit)}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <p style={{ fontSize: '12px', color: colors.muted, margin: '16px 0 0 0', textAlign: 'center' }}>Verde = Ganancia | Rojo = Pérdida</p>
+                  </div>
+                </div>
+              </div>
+            );
+          case 4:
+            return (
+              <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
+                <h2 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 24px 0', color: colors.text }}>🎰 Tu Historial de Sesiones</h2>
+                <p style={{ fontSize: '16px', color: colors.muted, margin: '0 0 32px 0', lineHeight: '1.6' }}>
+                  Gestiona cada sesión: edita los detalles, elimina registros y visualiza información detallada de cada juego.
+                </p>
+                <div style={{ background: colors.cardBg, border: `2px solid ${colors.accent}`, borderRadius: '12px', padding: '24px', marginBottom: '32px' }}>
+                  {demoData.sessions.map((s, i) => (
+                    <div key={i} style={{
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      padding: '16px', 
+                      background: colors.bg, 
+                      border: `1px solid ${colors.border}30`, 
+                      borderLeft: `4px solid ${s.isWin ? colors.success : colors.danger}`, 
+                      borderRadius: '8px', 
+                      marginBottom: i < demoData.sessions.length - 1 ? '8px' : 0,
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: '14px', fontWeight: 'bold', color: colors.text, margin: '0 0 4px 0' }}>{s.sala}</p>
+                        <p style={{ fontSize: '12px', color: colors.muted, margin: 0 }}>{s.date} • {s.type}</p>
+                      </div>
+                      <div style={{ textAlign: 'right', marginRight: '16px' }}>
+                        <p style={{ fontSize: '14px', fontWeight: 'bold', color: colors.text, margin: 0 }}>Buy: ${s.buyIn}</p>
+                        <p style={{ fontSize: '14px', fontWeight: 'bold', color: s.isWin ? colors.success : colors.danger, margin: 0 }}>{s.isWin ? '+' : ''}${s.profit}</p>
+                      </div>
+                      <button style={{padding: '10px 14px', background: 'transparent', border: `2px solid ${colors.primary}`, color: colors.primary, borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', marginRight: '8px', opacity: 0.6}}>
+                        ✏️
+                      </button>
+                      <button style={{padding: '10px 14px', background: 'transparent', border: `2px solid ${colors.danger}`, color: colors.danger, borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', opacity: 0.6}}>
+                        🗑️
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: '14px', color: colors.muted, textAlign: 'center', background: colors.cardBg, border: `1px solid ${colors.border}30`, borderRadius: '8px', padding: '16px' }}>
+                  💡 Cada sesión se puede editar o eliminar. El código de color indica si ganaste (verde) o perdiste (rojo).
+                </p>
+              </div>
+            );
+          default:
+            return null;
+        }
+      };
+
+      // ==========================================
+      // RENDER LOADING
       // ==========================================
       if (loading) {
         return (
@@ -329,18 +487,24 @@
         );
       }
 
+      // ==========================================
+      // RENDER PRINCIPAL
+      // ==========================================
       return (
         <div style={{ background: colors.bg, color: colors.text, minHeight: '100vh', fontFamily: 'Inter, system-ui', padding: '24px' }}>
           <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes slideIn {
+              from { opacity: 0; transform: scale(0.95); }
+              to { opacity: 1; transform: scale(1); }
+            }
             @keyframes colorShift {
               0% { border-color: #ff1493; box-shadow: 0 0 20px #ff1493; }
               50% { border-color: #00d4ff; box-shadow: 0 0 20px #00d4ff; }
               100% { border-color: #ff1493; box-shadow: 0 0 20px #ff1493; }
-            }
-            @keyframes inputColorShift {
-              0% { border-color: #00d4ff; box-shadow: 0 0 8px #00d4ff20; }
-              50% { border-color: #ff1493; box-shadow: 0 0 8px #ff149320; }
-              100% { border-color: #00d4ff; box-shadow: 0 0 8px #00d4ff20; }
             }
             @media (max-width: 1024px) {
               .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
@@ -395,79 +559,95 @@
             </div>
 
             {/* STATS CARDS */}
-            <div style={{ 
-              background: colors.cardBg,
-              border: `2px solid ${colors.border}30`,
-              borderRadius: '16px',
-              padding: '40px 32px',
-              marginBottom: '32px'
-            }}>
-              <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-                {[
-                  { key: 'profit', label: 'Profit', value: sessions.length > 0 ? `$${stats.profit.toFixed(0)}` : '$0', color: stats.profit >= 0 ? colors.success : colors.danger },
-                  { key: 'dias', label: 'Días Jugados', value: stats.dias, color: colors.primary },
-                  { key: 'winrate', label: 'Winrate', value: `${stats.winrate}%`, color: colors.accent },
-                  { key: 'sessions', label: 'Sesiones', value: stats.sessions, color: colors.secondary },
-                ].map((s, i) => (
-                  <div 
-                    key={i} 
-                    onMouseEnter={() => setHoveredStat(s.key)}
-                    onMouseLeave={() => setHoveredStat(null)}
-                    style={{ 
+            {sessions.length === 0 && !showForm && (
+              <div style={{ 
+                background: colors.cardBg,
+                border: `2px solid ${colors.border}30`,
+                borderRadius: '16px',
+                padding: '40px 32px',
+                marginBottom: '32px',
+                animation: 'colorShift 3s ease-in-out infinite'
+              }}>
+                <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                  {[
+                    { label: 'Profit', value: '$0', color: colors.success },
+                    { label: 'Días Jugados', value: '0', color: colors.primary },
+                    { label: 'Winrate', value: '0%', color: colors.accent },
+                    { label: 'Sesiones', value: '0', color: colors.secondary },
+                  ].map((s, i) => (
+                    <div key={i} style={{ 
                       background: colors.bg, 
                       border: `2px solid ${s.color}30`, 
                       borderRadius: '12px', 
                       padding: '20px',
-                      position: 'relative',
-                      cursor: 'help',
                       textAlign: 'center'
-                    }}
-                  >
-                    <p style={{ fontSize: '10px', color: colors.muted, margin: '0 0 12px 0', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>{s.label}</p>
-                    <p style={{ fontSize: '28px', fontWeight: 'bold', color: s.color, margin: 0 }}>{s.value}</p>
-                    
-                    {hoveredStat === s.key && (
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '100%',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: colors.bg,
-                        border: `1px solid ${s.color}`,
-                        borderRadius: '6px',
-                        padding: '12px',
-                        marginBottom: '8px',
-                        whiteSpace: 'nowrap',
-                        fontSize: '11px',
-                        color: colors.text,
-                        zIndex: 10,
-                        boxShadow: `0 4px 12px rgba(0,0,0,0.3)`,
-                        pointerEvents: 'none'
-                      }}>
-                        {statInfo[s.key].calc}
-                        <div style={{
-                          position: 'absolute',
-                          top: '100%',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          width: '0',
-                          height: '0',
-                          borderLeft: '6px solid transparent',
-                          borderRight: '6px solid transparent',
-                          borderTop: `6px solid ${s.color}`,
-                        }} />
-                      </div>
-                    )}
-                  </div>
-                ))}
+                    }}>
+                      <p style={{ fontSize: '10px', color: colors.muted, margin: '0 0 12px 0', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>{s.label}</p>
+                      <p style={{ fontSize: '28px', fontWeight: 'bold', color: s.color, margin: 0 }}>{s.value}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* MENSAJE VACÍO */}
+            {!showForm && sessions.length > 0 && (
+              <div style={{ 
+                background: colors.cardBg,
+                border: `2px solid ${colors.border}30`,
+                borderRadius: '16px',
+                padding: '40px 32px',
+                marginBottom: '32px'
+              }}>
+                <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                  {[
+                    { label: 'Profit', value: `$${stats.profit.toFixed(0)}`, color: stats.profit >= 0 ? colors.success : colors.danger },
+                    { label: 'Días Jugados', value: stats.dias, color: colors.primary },
+                    { label: 'Winrate', value: `${stats.winrate}%`, color: colors.accent },
+                    { label: 'Sesiones', value: stats.sessions, color: colors.secondary },
+                  ].map((s, i) => (
+                    <div key={i} style={{ 
+                      background: colors.bg, 
+                      border: `2px solid ${s.color}30`, 
+                      borderRadius: '12px', 
+                      padding: '20px',
+                      textAlign: 'center'
+                    }}>
+                      <p style={{ fontSize: '10px', color: colors.muted, margin: '0 0 12px 0', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>{s.label}</p>
+                      <p style={{ fontSize: '28px', fontWeight: 'bold', color: s.color, margin: 0 }}>{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* MENSAJE VACÍO + BOTÓN INFO */}
             {sessions.length === 0 && !showForm && (
-              <div style={{ textAlign: 'center', paddingTop: '40px', color: colors.muted }}>
+              <div style={{ 
+                textAlign: 'center', 
+                paddingTop: '40px',
+                color: colors.muted,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}>
                 <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>📊 No hay sesiones</p>
-                <p style={{ fontSize: '14px', marginBottom: '24px' }}>Registra tu primera sesión para comenzar a ver estadísticas</p>
+                <p style={{ fontSize: '14px', marginBottom: '24px' }}>Registra tus sesiones y podrás visualizar tu evolución en el juego</p>
+                <button
+                  onClick={() => setShowInfoModal(true)}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'transparent',
+                    border: `2px solid ${colors.secondary}`,
+                    color: colors.secondary,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    fontFamily: 'Inter, system-ui'
+                  }}
+                >
+                  ℹ️ ¿Cómo funciona?
+                </button>
               </div>
             )}
 
@@ -664,6 +844,139 @@
               </>
             )}
           </div>
+
+          {/* MODAL INFO */}
+          {showInfoModal && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.92)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 200,
+              fontFamily: 'Inter, system-ui',
+              padding: '20px',
+              backdropFilter: 'blur(4px)'
+            }}>
+              <div style={{
+                background: colors.bg,
+                border: `2px solid ${colors.primary}`,
+                borderRadius: '16px',
+                padding: '48px',
+                maxWidth: '900px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflow: 'auto',
+                position: 'relative',
+                boxShadow: `0 20px 60px rgba(255, 20, 147, 0.2)`
+              }}>
+                <button
+                  onClick={() => {setShowInfoModal(false); setInfoStep(1);}}
+                  style={{
+                    position: 'absolute',
+                    top: '24px',
+                    right: '24px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: colors.text,
+                    fontSize: '32px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    transition: 'transform 0.2s'
+                  }}
+                >
+                  ✕
+                </button>
+
+                <div style={{ animation: 'slideIn 0.5s ease-out' }}>
+                  {renderOnboardingStep()}
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end', marginTop: '48px' }}>
+                  {infoStep > 1 && (
+                    <button
+                      onClick={() => setInfoStep(infoStep - 1)}
+                      style={{
+                        padding: '12px 28px',
+                        background: 'transparent',
+                        border: `2px solid ${colors.secondary}`,
+                        color: '#fff',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        fontFamily: 'Inter, system-ui',
+                        transition: 'all 0.3s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      <ArrowLeft size={16} /> Atrás
+                    </button>
+                  )}
+                  
+                  {infoStep < 4 ? (
+                    <button
+                      onClick={() => setInfoStep(infoStep + 1)}
+                      style={{
+                        padding: '12px 28px',
+                        background: 'transparent',
+                        border: `2px solid ${colors.primary}`,
+                        color: '#fff',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        fontFamily: 'Inter, system-ui',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        transition: 'all 0.3s'
+                      }}
+                    >
+                      Siguiente <ArrowRight size={16} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {setShowInfoModal(false); setInfoStep(1);}}
+                      style={{
+                        padding: '12px 28px',
+                        background: 'transparent',
+                        border: `2px solid ${colors.primary}`,
+                        color: '#fff',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        fontFamily: 'Inter, system-ui',
+                        transition: 'all 0.3s'
+                      }}
+                    >
+                      ✓ Entendido
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '24px' }}>
+                  {[1, 2, 3, 4].map(step => (
+                    <div key={step} style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: infoStep === step ? colors.primary : colors.border,
+                      transition: 'all 0.3s',
+                      cursor: 'pointer'
+                    }} onClick={() => setInfoStep(step)} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
