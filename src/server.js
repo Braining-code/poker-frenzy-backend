@@ -1,3 +1,6 @@
+// ==========================================
+// IMPORTS
+// ==========================================
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -5,11 +8,16 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const sesionesRoutes = require('./routes/sesiones');
 const errorHandler = require('./middleware/errorHandler');
-
 const app = express();
 
+// ==========================================
+// ROOT DEL PROYECTO
+// ==========================================
 const rootDir = path.join(__dirname, '..');
 
+// ==========================================
+// SECURITY — CSP ACTUALIZADO
+// ==========================================
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -19,12 +27,13 @@ app.use(
           "'self'",
           "'unsafe-inline'",
           "https://cdn.tailwindcss.com",
-          "https://cdnjs.cloudflare.com"
+          "https://cdnjs.cloudflare.com",
+          "https://unpkg.com"
         ],
-        styleSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         imgSrc: ["'self'", "data:", "https:"],
         connectSrc: ["'self'", "*"],
-        fontSrc: ["'self'", "data:"],
+        fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],
         frameSrc: ["'none'"]
@@ -33,6 +42,9 @@ app.use(
   })
 );
 
+// ==========================================
+// NO-CACHE
+// ==========================================
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
   res.set('Pragma', 'no-cache');
@@ -40,9 +52,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// ==========================================
+// BODY PARSING
+// ==========================================
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// ==========================================
+// CORS
+// ==========================================
 app.use(
   cors({
     origin: [
@@ -62,9 +80,15 @@ app.use(
   })
 );
 
+// ==========================================
+// API ROUTES
+// ==========================================
 app.use('/api/auth', authRoutes);
 app.use('/api/sesiones', sesionesRoutes);
 
+// ==========================================
+// ARCHIVOS FRONTEND
+// ==========================================
 app.use(
   express.static(path.join(rootDir, 'app'), {
     etag: false,
@@ -73,24 +97,42 @@ app.use(
   })
 );
 
+// ==========================================
+// HOME
+// ==========================================
 app.get('/', (req, res) => {
   res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'));
 });
 
+// ==========================================
+// RUTA EXPLÍCITA
+// ==========================================
 app.get('/dashboard-v2.html', (req, res) => {
   res.sendFile(path.join(rootDir, 'app', 'dashboard-v2.html'));
 });
 
+// ==========================================
+// NO interceptar /api/*
+// ==========================================
 app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
+// ==========================================
+// 404
+// ==========================================
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
+// ==========================================
+// ERROR HANDLER
+// ==========================================
 app.use(errorHandler);
 
+// ==========================================
+// START SERVER
+// ==========================================
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🔥 Server running on port ${PORT}`);
