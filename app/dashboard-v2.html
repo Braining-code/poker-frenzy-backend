@@ -9,11 +9,42 @@
 
 <body class="bg-black text-white">
 
+<!-- TOUR OVERLAY -->
+<div id="tour-overlay" class="fixed inset-0 bg-black/90 z-[100] hidden backdrop-blur-sm transition-all"></div>
+
+<!-- TOUR TOOLTIP -->
+<div id="tour-tooltip" class="fixed z-[101] hidden">
+  <div class="bg-gradient-to-br from-purple-900/95 to-black border-2 border-cyan-500 rounded-xl p-6 shadow-2xl max-w-sm" style="box-shadow: 0 0 40px rgba(34, 211, 238, 0.3)">
+    <div class="flex justify-between items-start mb-4">
+      <h3 id="tour-title" class="text-xl font-bold text-cyan-400"></h3>
+      <button id="tour-close" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <p id="tour-description" class="text-gray-300 mb-6 leading-relaxed"></p>
+    <div class="flex justify-between items-center">
+      <div class="text-xs text-gray-500">
+        <span id="tour-current">1</span> / <span id="tour-total">5</span>
+      </div>
+      <div class="flex gap-2">
+        <button id="tour-prev" class="px-4 py-2 bg-transparent border border-purple-500 text-purple-400 rounded-lg text-sm font-bold hover:bg-purple-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+          ← Atrás
+        </button>
+        <button id="tour-next" class="px-4 py-2 bg-cyan-500 text-black rounded-lg text-sm font-bold hover:bg-cyan-400 transition-all">
+          Siguiente →
+        </button>
+        <button id="tour-finish" class="px-4 py-2 bg-cyan-500 text-black rounded-lg text-sm font-bold hover:bg-cyan-400 transition-all hidden">
+          ¡Entendido!
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="tour-arrow" class="absolute w-0 h-0 border-8 border-transparent"></div>
+</div>
+
 <nav class="fixed w-full top-0 z-50 bg-black/95 border-b border-purple-500/30 backdrop-blur-xl">
   <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
     <div class="text-2xl font-bold tracking-widest text-cyan-500">POKER FRENZY</div>
     <div class="flex items-center gap-6">
-      <div class="text-sm">
+      <div class="text-sm" id="tour-target-username">
         <p class="text-gray-400">Hola,</p>
         <p class="font-bold text-cyan-300" id="username">Usuario</p>
       </div>
@@ -28,17 +59,26 @@
 <aside class="w-64 bg-gradient-to-b from-purple-950/40 to-black border-r border-white/10 min-h-screen p-6 fixed left-0">
   <div class="space-y-8 mt-8">
     <div class="space-y-4">
-      <button data-pagina="inicio" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 font-bold text-sm text-left transition-all">
+      <button data-pagina="inicio" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 font-bold text-sm text-left transition-all" id="tour-target-inicio">
         📊 Inicio
       </button>
-      <button id="btn-my-stats" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all hover:text-cyan-300">
+      <button id="btn-my-stats" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all hover:text-cyan-300" id="tour-target-mystats">
         🎰 My Stats
+      </button>
+      <button id="btn-poker-rain" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all hover:text-cyan-300" id="tour-target-pokerrain">
+        🎮 Poker Rain
+      </button>
+      <button data-pagina="liga" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all" id="tour-target-liga">
+        🏆 Liga Poker Frenzy
       </button>
       <button data-pagina="academia" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all">
         📚 Academia
       </button>
-      <button data-pagina="jugar" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all">
-        🎮 Jugar Poker Crazy
+    </div>
+    
+    <div class="pt-8 border-t border-white/10">
+      <button id="restart-tour" class="w-full flex items-center gap-2 px-4 py-2 text-xs text-gray-500 hover:text-cyan-400 transition-all">
+        <span>ℹ️</span> Ver tour de nuevo
       </button>
     </div>
   </div>
@@ -56,7 +96,7 @@
   <!-- CARDS DESTACADAS -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
     
-    <div class="bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-xl p-6 hover:scale-105 transition-transform cursor-pointer" onclick="window.location.href='/my-stats.html'">
+    <div class="bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-xl p-6 hover:scale-105 transition-transform cursor-pointer" onclick="window.location.href='/my-stats.html'" id="tour-target-card-mystats">
       <div class="flex items-center gap-4 mb-4">
         <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center text-2xl">
           🎰
@@ -69,30 +109,30 @@
       <p class="text-sm text-gray-400">Registra y analiza tus sesiones de poker</p>
     </div>
 
-    <div class="bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/30 rounded-xl p-6 hover:scale-105 transition-transform cursor-pointer opacity-50">
+    <div class="bg-gradient-to-br from-fuchsia-500/20 to-fuchsia-500/5 border border-fuchsia-500/30 rounded-xl p-6 hover:scale-105 transition-transform cursor-pointer" onclick="window.location.href='/games/poker-rain.html'">
       <div class="flex items-center gap-4 mb-4">
-        <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-2xl">
-          📚
+        <div class="w-12 h-12 rounded-full bg-fuchsia-500/20 flex items-center justify-center text-2xl">
+          🎮
         </div>
         <div>
-          <p class="text-xs text-purple-300 font-bold">ACADEMIA</p>
-          <p class="text-lg font-black text-white">Aprende</p>
+          <p class="text-xs text-fuchsia-300 font-bold">POKER RAIN</p>
+          <p class="text-lg font-black text-white">Juega</p>
         </div>
       </div>
-      <p class="text-sm text-gray-400">Próximamente: Estrategias y tutoriales</p>
+      <p class="text-sm text-gray-400">Juego de cartas cayendo - Forma manos de poker</p>
     </div>
 
     <div class="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/30 rounded-xl p-6 hover:scale-105 transition-transform cursor-pointer opacity-50">
       <div class="flex items-center gap-4 mb-4">
         <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-2xl">
-          🎮
+          🏆
         </div>
         <div>
-          <p class="text-xs text-yellow-300 font-bold">POKER CRAZY</p>
-          <p class="text-lg font-black text-white">Juega</p>
+          <p class="text-xs text-yellow-300 font-bold">LIGA</p>
+          <p class="text-lg font-black text-white">Compite</p>
         </div>
       </div>
-      <p class="text-sm text-gray-400">Próximamente: Juego interactivo</p>
+      <p class="text-sm text-gray-400">Próximamente: Torneos semanales con premios</p>
     </div>
   </div>
 
@@ -108,17 +148,17 @@
         </div>
       </div>
       <div class="flex items-start gap-4">
-        <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-sm font-bold text-purple-400 flex-shrink-0">2</div>
+        <div class="w-8 h-8 rounded-full bg-fuchsia-500/20 flex items-center justify-center text-sm font-bold text-fuchsia-400 flex-shrink-0">2</div>
         <div>
-          <p class="font-bold text-white">Analiza tu progreso</p>
-          <p class="text-sm text-gray-400">Visualiza gráficos, stats y evolución de tu juego</p>
+          <p class="font-bold text-white">Juega Poker Rain</p>
+          <p class="text-sm text-gray-400">Diviértete formando manos mientras ganas puntos</p>
         </div>
       </div>
       <div class="flex items-start gap-4">
         <div class="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-sm font-bold text-yellow-400 flex-shrink-0">3</div>
         <div>
-          <p class="font-bold text-white">Mejora continuamente</p>
-          <p class="text-sm text-gray-400">Identifica patrones y optimiza tu estrategia</p>
+          <p class="font-bold text-white">Compite en la Liga</p>
+          <p class="text-sm text-gray-400">Próximamente: Torneos y ranking de jugadores</p>
         </div>
       </div>
     </div>
@@ -134,6 +174,128 @@
   </div>
 </div>
 
+<!-- PÁGINA LIGA -->
+<div id="pagina-liga" class="pagina-contenido hidden">
+  <div class="mb-8">
+    <h1 class="text-4xl font-black mb-2">🏆 LIGA POKER FRENZY</h1>
+    <p class="text-gray-400">Torneos semanales • Martes y Jueves</p>
+  </div>
+
+  <!-- CAMPEÓN ACTUAL -->
+  <div class="bg-gradient-to-br from-yellow-500/20 to-orange-500/10 border-2 border-yellow-500/40 rounded-xl p-8 mb-8">
+    <div class="flex items-center gap-4 mb-4">
+      <div class="text-4xl">🏆</div>
+      <div>
+        <p class="text-xs text-yellow-400 font-bold uppercase tracking-wider">Campeón de la Liga</p>
+        <p class="text-2xl font-black text-white">Ganador mensual se lleva <span class="text-yellow-400">iPhone</span></p>
+      </div>
+    </div>
+    <button class="mt-4 px-6 py-2 bg-yellow-500/20 border border-yellow-500 text-yellow-400 rounded-lg font-bold hover:bg-yellow-500/30 transition-all">
+      VER RANKING
+    </button>
+  </div>
+
+  <!-- PRÓXIMOS TORNEOS -->
+  <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-8">
+    <div class="bg-white/5 px-6 py-4 border-b border-white/10">
+      <h2 class="text-xl font-bold">PRÓXIMOS TORNEOS</h2>
+    </div>
+    <div class="divide-y divide-white/10">
+      <!-- MARTES -->
+      <div class="px-6 py-5 hover:bg-white/5 transition-all">
+        <div class="grid grid-cols-5 gap-4 items-center">
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Día</p>
+            <p class="text-lg font-bold text-cyan-400">MARTES</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Hora</p>
+            <p class="font-bold text-white">15:00</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Premio</p>
+            <p class="font-bold text-yellow-400">$300</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Premiados</p>
+            <p class="text-gray-400">50 premiados</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Jugadores</p>
+            <p class="text-gray-400">1,000</p>
+          </div>
+        </div>
+      </div>
+      <!-- JUEVES -->
+      <div class="px-6 py-5 hover:bg-white/5 transition-all">
+        <div class="grid grid-cols-5 gap-4 items-center">
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Día</p>
+            <p class="text-lg font-bold text-fuchsia-400">JUEVES</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Hora</p>
+            <p class="font-bold text-white">19:00</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Premio</p>
+            <p class="font-bold text-yellow-400">$300</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Premiados</p>
+            <p class="text-gray-400">50 premiados</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Jugadores</p>
+            <p class="text-gray-400">1,000</p>
+          </div>
+        </div>
+      </div>
+      <!-- GRAND SLAM -->
+      <div class="px-6 py-5 bg-gradient-to-r from-orange-500/10 to-transparent hover:from-orange-500/20 transition-all">
+        <div class="grid grid-cols-5 gap-4 items-center">
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Día</p>
+            <p class="text-lg font-bold text-orange-400">GRAND SLAM</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Hora</p>
+            <p class="font-bold text-white">Últ. dom 19hs</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Premio</p>
+            <p class="font-bold text-yellow-400">$500</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Premiados</p>
+            <p class="text-gray-400">25 puestos</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Jugadores</p>
+            <p class="text-gray-400">500</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOBLE GANADOR -->
+  <div class="bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/30 rounded-xl p-6 mb-8">
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-2xl">⚡</span>
+      <h3 class="text-lg font-bold text-red-400">DOBLE GANADOR</h3>
+    </div>
+    <p class="text-gray-300">Gana martes Y jueves = <span class="font-bold text-yellow-400">Duplica tus puntos</span></p>
+  </div>
+
+  <!-- INFO -->
+  <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+    <p class="text-center text-sm text-gray-400">
+      📅 Todos los meses la liga comienza de nuevo
+    </p>
+  </div>
+</div>
+
 <!-- PÁGINA ACADEMIA (PLACEHOLDER) -->
 <div id="pagina-academia" class="pagina-contenido hidden">
   <div class="text-center py-20">
@@ -146,23 +308,163 @@
   </div>
 </div>
 
-<!-- PÁGINA JUGAR (PLACEHOLDER) -->
-<div id="pagina-jugar" class="pagina-contenido hidden">
-  <div class="text-center py-20">
-    <div class="text-6xl mb-4">🎮</div>
-    <h2 class="text-3xl font-bold mb-4">Poker Crazy</h2>
-    <p class="text-gray-400 mb-8">Juego interactivo próximamente</p>
-    <button onclick="document.getElementById('pagina-inicio').classList.remove('hidden'); document.getElementById('pagina-jugar').classList.add('hidden');" class="px-6 py-3 bg-yellow-500/20 border-2 border-yellow-500 text-yellow-400 font-bold rounded-lg hover:bg-yellow-500/30 transition-all">
-      Volver al Inicio
-    </button>
-  </div>
-</div>
-
 </main>
 </div>
 
 <script>
 const API_URL = "https://web-production-e4083.up.railway.app";
+
+// ==========================================
+// TOUR GUIADO
+// ==========================================
+const tourSteps = [
+  {
+    target: null,
+    title: "¡Bienvenido a Poker Frenzy! 🎰",
+    description: "Te voy a mostrar las principales funciones de tu dashboard. Haz click en 'Siguiente' para comenzar el tour.",
+    position: "center"
+  },
+  {
+    target: "tour-target-mystats",
+    title: "My Stats - Tu Tracker Personal 📊",
+    description: "Aquí registras todas tus sesiones de poker y visualizas tus estadísticas: profit, winrate, días jugados y más. Con gráficos de evolución.",
+    position: "right"
+  },
+  {
+    target: "tour-target-pokerrain",
+    title: "Poker Rain - Juego Interactivo 🎮",
+    description: "Juego adictivo donde cartas caen desde arriba. Forma manos de poker (escalera, color, etc) antes de que caigan para ganar puntos.",
+    position: "right"
+  },
+  {
+    target: "tour-target-liga",
+    title: "Liga Poker Frenzy - Torneos 🏆",
+    description: "Próximamente: Torneos semanales (martes y jueves) con premios reales. El campeón mensual se lleva un iPhone.",
+    position: "right"
+  },
+  {
+    target: "tour-target-card-mystats",
+    title: "Acceso Rápido ⚡",
+    description: "También puedes acceder a My Stats desde estas cards en el home. Todo está diseñado para que llegues rápido a donde necesites.",
+    position: "top"
+  }
+];
+
+let currentTourStep = 0;
+
+function showTourStep(stepIndex) {
+  const step = tourSteps[stepIndex];
+  const overlay = document.getElementById('tour-overlay');
+  const tooltip = document.getElementById('tour-tooltip');
+  const arrow = document.getElementById('tour-arrow');
+  
+  document.getElementById('tour-title').textContent = step.title;
+  document.getElementById('tour-description').textContent = step.description;
+  document.getElementById('tour-current').textContent = stepIndex + 1;
+  document.getElementById('tour-total').textContent = tourSteps.length;
+  
+  // Botones
+  document.getElementById('tour-prev').disabled = stepIndex === 0;
+  document.getElementById('tour-next').classList.toggle('hidden', stepIndex === tourSteps.length - 1);
+  document.getElementById('tour-finish').classList.toggle('hidden', stepIndex !== tourSteps.length - 1);
+  
+  // Remover highlight anterior
+  document.querySelectorAll('[id^="tour-target-"]').forEach(el => {
+    el.style.position = '';
+    el.style.zIndex = '';
+    el.style.boxShadow = '';
+  });
+  
+  overlay.classList.remove('hidden');
+  tooltip.classList.remove('hidden');
+  
+  if (step.target) {
+    const target = document.getElementById(step.target);
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      
+      // Highlight del elemento
+      target.style.position = 'relative';
+      target.style.zIndex = '102';
+      target.style.boxShadow = '0 0 0 4px rgba(34, 211, 238, 0.5), 0 0 30px rgba(34, 211, 238, 0.3)';
+      
+      // Posicionar tooltip
+      let top, left;
+      
+      if (step.position === 'right') {
+        top = rect.top + window.scrollY;
+        left = rect.right + 20;
+        arrow.style.borderRightColor = 'rgb(147, 51, 234)';
+        arrow.style.borderLeftColor = 'transparent';
+        arrow.style.borderTopColor = 'transparent';
+        arrow.style.borderBottomColor = 'transparent';
+        arrow.style.top = '30px';
+        arrow.style.left = '-16px';
+        arrow.style.right = 'auto';
+        arrow.style.bottom = 'auto';
+      } else if (step.position === 'top') {
+        top = rect.top + window.scrollY - tooltip.offsetHeight - 30;
+        left = rect.left + (rect.width / 2) - 200;
+        arrow.style.borderTopColor = 'rgb(147, 51, 234)';
+        arrow.style.borderBottomColor = 'transparent';
+        arrow.style.borderLeftColor = 'transparent';
+        arrow.style.borderRightColor = 'transparent';
+        arrow.style.bottom = '-16px';
+        arrow.style.left = '50%';
+        arrow.style.top = 'auto';
+        arrow.style.right = 'auto';
+        arrow.style.transform = 'translateX(-50%)';
+      }
+      
+      tooltip.style.top = top + 'px';
+      tooltip.style.left = left + 'px';
+    }
+  } else {
+    // Centro de la pantalla
+    tooltip.style.top = '50%';
+    tooltip.style.left = '50%';
+    tooltip.style.transform = 'translate(-50%, -50%)';
+    arrow.classList.add('hidden');
+  }
+}
+
+function startTour() {
+  currentTourStep = 0;
+  showTourStep(0);
+}
+
+function endTour() {
+  document.getElementById('tour-overlay').classList.add('hidden');
+  document.getElementById('tour-tooltip').classList.add('hidden');
+  
+  document.querySelectorAll('[id^="tour-target-"]').forEach(el => {
+    el.style.position = '';
+    el.style.zIndex = '';
+    el.style.boxShadow = '';
+  });
+  
+  localStorage.setItem('tourCompleted', 'true');
+}
+
+// Event listeners tour
+document.getElementById('tour-next').addEventListener('click', () => {
+  currentTourStep++;
+  showTourStep(currentTourStep);
+});
+
+document.getElementById('tour-prev').addEventListener('click', () => {
+  currentTourStep--;
+  showTourStep(currentTourStep);
+});
+
+document.getElementById('tour-finish').addEventListener('click', endTour);
+document.getElementById('tour-close').addEventListener('click', endTour);
+document.getElementById('restart-tour').addEventListener('click', startTour);
+
+// Iniciar tour si es primera vez
+if (!localStorage.getItem('tourCompleted')) {
+  setTimeout(startTour, 1000);
+}
 
 // ==========================================
 // CAPTURA TOKENS DEL HASH
@@ -237,10 +539,14 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
 });
 
 // ==========================================
-// BOTÓN MY STATS
+// BOTONES NAVEGACIÓN
 // ==========================================
 document.getElementById("btn-my-stats").addEventListener("click", () => {
   window.location.href = "/my-stats.html";
+});
+
+document.getElementById("btn-poker-rain").addEventListener("click", () => {
+  window.location.href = "/games/poker-rain.html";
 });
 
 // ==========================================
