@@ -5,46 +5,67 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Poker Frenzy - Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .tour-spotlight {
+    transition: all 0.4s ease-out;
+  }
+  
+  #tour-line {
+    transition: all 0.3s ease-out;
+  }
+</style>
 </head>
 
 <body class="bg-black text-white">
 
-<!-- TOUR OVERLAY -->
-<div id="tour-overlay" class="fixed inset-0 bg-black/90 z-[100] hidden backdrop-blur-sm transition-all"></div>
+<!-- TOUR OVERLAY CON SPOTLIGHT -->
+<div id="tour-overlay" class="fixed inset-0 z-[100] hidden pointer-events-none" style="background: radial-gradient(circle 250px at 0px 0px, transparent 0%, rgba(0, 0, 0, 0.92) 100%); backdrop-filter: blur(3px); transition: all 0.4s ease-out;"></div>
 
-<!-- TOUR TOOLTIP -->
-<div id="tour-tooltip" class="fixed z-[101] hidden">
-  <div class="bg-gradient-to-br from-purple-900/95 to-black border-2 border-cyan-500 rounded-xl p-6 shadow-2xl max-w-sm" style="box-shadow: 0 0 40px rgba(34, 211, 238, 0.3)">
+<!-- TOUR LINE SVG -->
+<svg id="tour-line" class="fixed z-[101] hidden pointer-events-none" style="width: 100%; height: 100%; top: 0; left: 0;">
+  <line id="tour-line-path" x1="0" y1="0" x2="0" y2="0" stroke="#22d3ee" stroke-width="2" stroke-dasharray="5,5" opacity="0.8">
+    <animate attributeName="stroke-dashoffset" from="0" to="10" dur="0.5s" repeatCount="indefinite" />
+  </line>
+  <circle id="tour-line-dot" cx="0" cy="0" r="4" fill="#22d3ee" opacity="0.8" />
+</svg>
+
+<!-- TOUR CARD INFO -->
+<div id="tour-card" class="fixed z-[102] hidden" style="right: 80px; top: 50%; transform: translateY(-50%); max-width: 420px; animation: fadeIn 0.3s ease-out;">
+  <div class="bg-gradient-to-br from-gray-900 via-purple-900/40 to-gray-900 border-2 border-cyan-500/60 rounded-2xl p-8 shadow-2xl" style="box-shadow: 0 0 60px rgba(34, 211, 238, 0.25);">
     <div class="flex justify-between items-start mb-4">
-      <h3 id="tour-title" class="text-xl font-bold text-cyan-400"></h3>
-      <button id="tour-close" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+      <h3 id="tour-title" class="text-2xl font-bold text-cyan-400"></h3>
+      <button id="tour-close" class="text-gray-400 hover:text-white text-3xl leading-none transition-colors">&times;</button>
     </div>
-    <p id="tour-description" class="text-gray-300 mb-6 leading-relaxed"></p>
+    <p id="tour-description" class="text-gray-300 mb-8 leading-relaxed text-base"></p>
     <div class="flex justify-between items-center">
-      <div class="text-xs text-gray-500">
+      <div class="text-sm text-gray-500 font-bold">
         <span id="tour-current">1</span> / <span id="tour-total">5</span>
       </div>
-      <div class="flex gap-2">
-        <button id="tour-prev" class="px-4 py-2 bg-transparent border border-purple-500 text-purple-400 rounded-lg text-sm font-bold hover:bg-purple-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+      <div class="flex gap-3">
+        <button id="tour-prev" class="px-5 py-2.5 bg-transparent border-2 border-purple-500 text-purple-400 rounded-lg text-sm font-bold hover:bg-purple-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
           ← Atrás
         </button>
-        <button id="tour-next" class="px-4 py-2 bg-cyan-500 text-black rounded-lg text-sm font-bold hover:bg-cyan-400 transition-all">
+        <button id="tour-next" class="px-5 py-2.5 bg-cyan-500 text-black rounded-lg text-sm font-bold hover:bg-cyan-400 transition-all shadow-lg">
           Siguiente →
         </button>
-        <button id="tour-finish" class="px-4 py-2 bg-cyan-500 text-black rounded-lg text-sm font-bold hover:bg-cyan-400 transition-all hidden">
+        <button id="tour-finish" class="px-5 py-2.5 bg-cyan-500 text-black rounded-lg text-sm font-bold hover:bg-cyan-400 transition-all shadow-lg hidden">
           ¡Entendido!
         </button>
       </div>
     </div>
   </div>
-  <div id="tour-arrow" class="absolute w-0 h-0 border-8 border-transparent"></div>
 </div>
 
 <nav class="fixed w-full top-0 z-50 bg-black/95 border-b border-purple-500/30 backdrop-blur-xl">
   <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
     <div class="text-2xl font-bold tracking-widest text-cyan-500">POKER FRENZY</div>
     <div class="flex items-center gap-6">
-      <div class="text-sm" id="tour-target-username">
+      <div class="text-sm">
         <p class="text-gray-400">Hola,</p>
         <p class="font-bold text-cyan-300" id="username">Usuario</p>
       </div>
@@ -56,19 +77,19 @@
 </nav>
 
 <div class="pt-20 flex">
-<aside class="w-64 bg-gradient-to-b from-purple-950/40 to-black border-r border-white/10 min-h-screen p-6 fixed left-0">
+<aside class="w-64 bg-gradient-to-b from-purple-950/40 to-black border-r border-white/10 min-h-screen p-6 fixed left-0 z-40">
   <div class="space-y-8 mt-8">
     <div class="space-y-4">
-      <button data-pagina="inicio" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 font-bold text-sm text-left transition-all" id="tour-target-inicio">
+      <button data-pagina="inicio" id="tour-btn-inicio" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 font-bold text-sm text-left transition-all">
         📊 Inicio
       </button>
-      <button id="btn-my-stats" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all hover:text-cyan-300" id="tour-target-mystats">
+      <button id="btn-my-stats" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all hover:text-cyan-300">
         🎰 My Stats
       </button>
-      <button id="btn-poker-rain" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all hover:text-cyan-300" id="tour-target-pokerrain">
+      <button id="btn-poker-rain" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all hover:text-cyan-300">
         🎮 Poker Rain
       </button>
-      <button data-pagina="liga" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all" id="tour-target-liga">
+      <button data-pagina="liga" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all">
         🏆 Liga Poker Frenzy
       </button>
       <button data-pagina="academia" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 text-sm text-left transition-all">
@@ -96,7 +117,7 @@
   <!-- CARDS DESTACADAS -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
     
-    <div class="bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-xl p-6 hover:scale-105 transition-transform cursor-pointer" onclick="window.location.href='/my-stats.html'" id="tour-target-card-mystats">
+    <div class="bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-xl p-6 hover:scale-105 transition-transform cursor-pointer" onclick="window.location.href='/my-stats.html'">
       <div class="flex items-center gap-4 mb-4">
         <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center text-2xl">
           🎰
@@ -122,7 +143,7 @@
       <p class="text-sm text-gray-400">Juego de cartas cayendo - Forma manos de poker</p>
     </div>
 
-    <div class="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/30 rounded-xl p-6 hover:scale-105 transition-transform cursor-pointer opacity-50">
+    <div class="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/30 rounded-xl p-6 hover:scale-105 transition-transform cursor-pointer opacity-50" onclick="alert('Próximamente')">
       <div class="flex items-center gap-4 mb-4">
         <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-2xl">
           🏆
@@ -302,7 +323,7 @@
     <div class="text-6xl mb-4">📚</div>
     <h2 class="text-3xl font-bold mb-4">Academia Poker Frenzy</h2>
     <p class="text-gray-400 mb-8">Contenido educativo próximamente</p>
-    <button onclick="document.getElementById('pagina-inicio').classList.remove('hidden'); document.getElementById('pagina-academia').classList.add('hidden');" class="px-6 py-3 bg-purple-500/20 border-2 border-purple-500 text-purple-400 font-bold rounded-lg hover:bg-purple-500/30 transition-all">
+    <button onclick="document.querySelectorAll('.pagina-contenido').forEach(p => p.classList.add('hidden')); document.getElementById('pagina-inicio').classList.remove('hidden');" class="px-6 py-3 bg-purple-500/20 border-2 border-purple-500 text-purple-400 font-bold rounded-lg hover:bg-purple-500/30 transition-all">
       Volver al Inicio
     </button>
   </div>
@@ -319,151 +340,157 @@ const API_URL = "https://web-production-e4083.up.railway.app";
 // ==========================================
 const tourSteps = [
   {
-    target: null,
     title: "¡Bienvenido a Poker Frenzy! 🎰",
-    description: "Te voy a mostrar las principales funciones de tu dashboard. Haz click en 'Siguiente' para comenzar el tour.",
-    position: "center"
+    description: "Te mostramos las principales funciones del dashboard. Usa las flechas para navegar por el tour."
   },
   {
-    target: "tour-target-mystats",
+    target: "btn-my-stats",
     title: "My Stats - Tu Tracker Personal 📊",
-    description: "Aquí registras todas tus sesiones de poker y visualizas tus estadísticas: profit, winrate, días jugados y más. Con gráficos de evolución.",
-    position: "right"
+    description: "Registra todas tus sesiones de poker y visualiza tus estadísticas: profit, winrate, días jugados. Con gráficos de evolución en tiempo real."
   },
   {
-    target: "tour-target-pokerrain",
+    target: "btn-poker-rain",
     title: "Poker Rain - Juego Interactivo 🎮",
-    description: "Juego adictivo donde cartas caen desde arriba. Forma manos de poker (escalera, color, etc) antes de que caigan para ganar puntos.",
-    position: "right"
+    description: "Juego adictivo donde cartas caen desde arriba. Forma manos de poker (escalera, color, full) antes de que caigan para ganar puntos."
   },
   {
-    target: "tour-target-liga",
+    target: "tour-btn-inicio",
     title: "Liga Poker Frenzy - Torneos 🏆",
-    description: "Próximamente: Torneos semanales (martes y jueves) con premios reales. El campeón mensual se lleva un iPhone.",
-    position: "right"
-  },
-  {
-    target: "tour-target-card-mystats",
-    title: "Acceso Rápido ⚡",
-    description: "También puedes acceder a My Stats desde estas cards en el home. Todo está diseñado para que llegues rápido a donde necesites.",
-    position: "top"
+    description: "Próximamente: Torneos semanales (martes y jueves) con premios reales. El campeón mensual se lleva un iPhone."
   }
 ];
 
 let currentTourStep = 0;
 
+function updateSpotlight(targetElement) {
+  const overlay = document.getElementById('tour-overlay');
+  
+  if (!targetElement) {
+    overlay.style.display = 'none';
+    return;
+  }
+  
+  const rect = targetElement.getBoundingClientRect();
+  const centerX = rect.left + (rect.width / 2);
+  const centerY = rect.top + (rect.height / 2);
+  
+  overlay.style.background = `radial-gradient(circle 250px at ${centerX}px ${centerY}px, transparent 0%, rgba(0, 0, 0, 0.92) 100%)`;
+  overlay.style.backdropFilter = 'blur(3px)';
+}
+
+function updateLine(targetElement) {
+  const line = document.getElementById('tour-line-path');
+  const dot = document.getElementById('tour-line-dot');
+  
+  if (!targetElement) return;
+  
+  const rect = targetElement.getBoundingClientRect();
+  const cardX = window.innerWidth - 500;
+  const cardY = window.innerHeight / 2;
+  
+  const targetX = rect.right + 10;
+  const targetY = rect.top + (rect.height / 2);
+  
+  line.setAttribute('x1', targetX);
+  line.setAttribute('y1', targetY);
+  line.setAttribute('x2', cardX);
+  line.setAttribute('y2', cardY);
+  
+  dot.setAttribute('cx', targetX);
+  dot.setAttribute('cy', targetY);
+}
+
 function showTourStep(stepIndex) {
   const step = tourSteps[stepIndex];
-  const overlay = document.getElementById('tour-overlay');
-  const tooltip = document.getElementById('tour-tooltip');
-  const arrow = document.getElementById('tour-arrow');
   
   document.getElementById('tour-title').textContent = step.title;
   document.getElementById('tour-description').textContent = step.description;
   document.getElementById('tour-current').textContent = stepIndex + 1;
   document.getElementById('tour-total').textContent = tourSteps.length;
   
-  // Botones
   document.getElementById('tour-prev').disabled = stepIndex === 0;
   document.getElementById('tour-next').classList.toggle('hidden', stepIndex === tourSteps.length - 1);
   document.getElementById('tour-finish').classList.toggle('hidden', stepIndex !== tourSteps.length - 1);
   
-  // Remover highlight anterior
-  document.querySelectorAll('[id^="tour-target-"]').forEach(el => {
-    el.style.position = '';
-    el.style.zIndex = '';
-    el.style.boxShadow = '';
-  });
+  const overlay = document.getElementById('tour-overlay');
+  const card = document.getElementById('tour-card');
+  const lineEl = document.getElementById('tour-line');
   
   overlay.classList.remove('hidden');
-  tooltip.classList.remove('hidden');
+  card.classList.remove('hidden');
   
   if (step.target) {
-    const target = document.getElementById(step.target);
-    if (target) {
-      const rect = target.getBoundingClientRect();
+    const targetElement = document.getElementById(step.target);
+    if (targetElement) {
+      targetElement.style.position = 'relative';
+      targetElement.style.zIndex = '103';
       
-      // Highlight del elemento
-      target.style.position = 'relative';
-      target.style.zIndex = '102';
-      target.style.boxShadow = '0 0 0 4px rgba(34, 211, 238, 0.5), 0 0 30px rgba(34, 211, 238, 0.3)';
-      
-      // Posicionar tooltip
-      let top, left;
-      
-      if (step.position === 'right') {
-        top = rect.top + window.scrollY;
-        left = rect.right + 20;
-        arrow.style.borderRightColor = 'rgb(147, 51, 234)';
-        arrow.style.borderLeftColor = 'transparent';
-        arrow.style.borderTopColor = 'transparent';
-        arrow.style.borderBottomColor = 'transparent';
-        arrow.style.top = '30px';
-        arrow.style.left = '-16px';
-        arrow.style.right = 'auto';
-        arrow.style.bottom = 'auto';
-      } else if (step.position === 'top') {
-        top = rect.top + window.scrollY - tooltip.offsetHeight - 30;
-        left = rect.left + (rect.width / 2) - 200;
-        arrow.style.borderTopColor = 'rgb(147, 51, 234)';
-        arrow.style.borderBottomColor = 'transparent';
-        arrow.style.borderLeftColor = 'transparent';
-        arrow.style.borderRightColor = 'transparent';
-        arrow.style.bottom = '-16px';
-        arrow.style.left = '50%';
-        arrow.style.top = 'auto';
-        arrow.style.right = 'auto';
-        arrow.style.transform = 'translateX(-50%)';
-      }
-      
-      tooltip.style.top = top + 'px';
-      tooltip.style.left = left + 'px';
+      updateSpotlight(targetElement);
+      updateLine(targetElement);
+      lineEl.classList.remove('hidden');
     }
   } else {
-    // Centro de la pantalla
-    tooltip.style.top = '50%';
-    tooltip.style.left = '50%';
-    tooltip.style.transform = 'translate(-50%, -50%)';
-    arrow.classList.add('hidden');
+    lineEl.classList.add('hidden');
+    overlay.style.background = 'rgba(0, 0, 0, 0.92)';
+    overlay.style.backdropFilter = 'blur(5px)';
   }
 }
 
-function startTour() {
-  currentTourStep = 0;
-  showTourStep(0);
+function clearTourHighlights() {
+  ['btn-my-stats', 'btn-poker-rain', 'tour-btn-inicio'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.position = '';
+      el.style.zIndex = '';
+    }
+  });
 }
 
 function endTour() {
   document.getElementById('tour-overlay').classList.add('hidden');
-  document.getElementById('tour-tooltip').classList.add('hidden');
-  
-  document.querySelectorAll('[id^="tour-target-"]').forEach(el => {
-    el.style.position = '';
-    el.style.zIndex = '';
-    el.style.boxShadow = '';
-  });
-  
+  document.getElementById('tour-card').classList.add('hidden');
+  document.getElementById('tour-line').classList.add('hidden');
+  clearTourHighlights();
   localStorage.setItem('tourCompleted', 'true');
 }
 
-// Event listeners tour
 document.getElementById('tour-next').addEventListener('click', () => {
+  clearTourHighlights();
   currentTourStep++;
   showTourStep(currentTourStep);
 });
 
 document.getElementById('tour-prev').addEventListener('click', () => {
+  clearTourHighlights();
   currentTourStep--;
   showTourStep(currentTourStep);
 });
 
 document.getElementById('tour-finish').addEventListener('click', endTour);
 document.getElementById('tour-close').addEventListener('click', endTour);
-document.getElementById('restart-tour').addEventListener('click', startTour);
+document.getElementById('restart-tour').addEventListener('click', () => {
+  currentTourStep = 0;
+  showTourStep(0);
+});
 
-// Iniciar tour si es primera vez
+window.addEventListener('resize', () => {
+  if (!document.getElementById('tour-overlay').classList.contains('hidden')) {
+    const step = tourSteps[currentTourStep];
+    if (step.target) {
+      const targetElement = document.getElementById(step.target);
+      if (targetElement) {
+        updateSpotlight(targetElement);
+        updateLine(targetElement);
+      }
+    }
+  }
+});
+
 if (!localStorage.getItem('tourCompleted')) {
-  setTimeout(startTour, 1000);
+  setTimeout(() => {
+    currentTourStep = 0;
+    showTourStep(0);
+  }, 1000);
 }
 
 // ==========================================
@@ -533,8 +560,9 @@ document.getElementById("cerrar-sesion").addEventListener("click", () => {
 // ==========================================
 document.querySelectorAll(".nav-btn").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".pagina-contenido").forEach(p => p.classList.add("hidden"));
-    document.getElementById("pagina-" + btn.dataset.pagina).classList.remove("hidden");
+    document.querySelectorAll(".pagina-contenido").forEach(p => p.classList.add('hidden'));
+    const pagina = document.getElementById("pagina-" + btn.dataset.pagina);
+    if (pagina) pagina.classList.remove('hidden');
   });
 });
 
